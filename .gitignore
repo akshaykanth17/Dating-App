@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files (NEVER commit secrets)
+.env
+.env.local
+.env.production
+backend/.env
+
+# Build output
+dist/
+build/
+**/dist/
+**/build/
+
+# Uploaded user files
+backend/uploads/
+!backend/uploads/seed/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Playwright test results
+frontend/test-results/
+frontend/playwright-report/
+
+# Prisma generated
+backend/prisma/migrations/*.db
