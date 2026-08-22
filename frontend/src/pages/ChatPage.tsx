@@ -156,10 +156,23 @@ export default function ChatPage() {
     e.preventDefault();
     if (!inputText.trim() || !selectedMatch || !socket) return;
 
-    // Send via socket
+    const content = inputText.trim();
+
+    // Optimistically add the message to UI immediately
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`,
+      matchId: selectedMatch.id,
+      senderId: user?.id || '',
+      content,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMessage]);
+    scrollToBottom();
+
+    // Send via socket (server will broadcast to others)
     socket.emit('send_message', {
       matchId: selectedMatch.id,
-      content: inputText.trim(),
+      content,
     });
 
     setInputText('');

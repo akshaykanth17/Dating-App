@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import Layout from '../components/Layout';
+import ProfileCardContent from '../components/ProfileCardContent';
 import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, User as UserIcon } from 'lucide-react';
 import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from 'framer-motion';
 
@@ -52,6 +53,10 @@ export default function SwipePage() {
   const rotation = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 150], [0, 1]);
   const passOpacity = useTransform(x, [0, -150], [0, 1]);
+  
+  // Background card effects
+  const bgScale = useTransform(x, [-200, 0, 200], [1, 0.95, 1]);
+  const bgFilter = useTransform(x, [-200, 0, 200], ['blur(0px)', 'blur(8px)', 'blur(0px)']);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -100,16 +105,6 @@ export default function SwipePage() {
     localStorage.setItem('heartsync_swipe_tutorial', 'true');
   };
 
-  const getAge = (birthdateString: string): number => {
-    const today = new Date();
-    const birthDate = new Date(birthdateString);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
 
   const handleSwipe = async (type: 'LIKE' | 'PASS') => {
     if (candidates.length === 0 || currentIndex >= candidates.length) return;
@@ -193,172 +188,9 @@ export default function SwipePage() {
       setCurrentIndex((prev) => prev + 1);
       setShowSafetyModal(false);
       setReportNote('');
-      // Reset scroll position if needed, though component re-render might handle it
     } catch (error: any) {
       alert(error.message || 'Action failed.');
     }
-  };
-
-  const renderCardContent = (candidate: Candidate, isTop: boolean) => {
-    const primaryPhoto = candidate?.photos?.find((p) => p.isPrimary) || candidate?.photos?.[0];
-    const otherPhotos = candidate?.photos?.filter((p) => p.id !== primaryPhoto?.id) || [];
-
-    return (
-      <>
-        {/* LIKE / PASS Stamps (Only on top card) */}
-        {isTop && (
-          <>
-            <motion.div
-              className="absolute top-10 left-6 z-40 px-6 py-2 rounded-xl border-4 border-emerald-500 text-emerald-400 font-black text-3xl tracking-widest rotate-[-12deg] pointer-events-none"
-              style={{ opacity: likeOpacity }}
-            >
-              LIKE
-            </motion.div>
-            <motion.div
-              className="absolute top-10 right-6 z-40 px-6 py-2 rounded-xl border-4 border-rose-500 text-rose-400 font-black text-3xl tracking-widest rotate-[12deg] pointer-events-none"
-              style={{ opacity: passOpacity }}
-            >
-              DISLIKE
-            </motion.div>
-          </>
-        )}
-
-        {/* Primary Image Section */}
-        <div className="relative w-full aspect-[3/4] md:aspect-[3.2/4]">
-          {primaryPhoto ? (
-            <img
-              src={
-                primaryPhoto.url.startsWith('/uploads')
-                  ? `${API_URL.replace('/api', '')}${primaryPhoto.url}`
-                  : primaryPhoto.url
-              }
-              alt={candidate.name}
-              className="w-full h-full object-cover select-none pointer-events-none"
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-slate-900">
-              <UserIcon className="w-20 h-20" />
-              <span className="text-xs mt-2">No photo uploaded</span>
-            </div>
-          )}
-          {/* Visual Vignette overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
-
-          {/* Profile Basic Info Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col">
-            <div className="flex items-baseline space-x-2">
-              <h3 className="text-3xl font-black text-slate-100 drop-shadow-md">{candidate.name}</h3>
-              <span className="text-2xl font-bold text-slate-300 drop-shadow-md">{getAge(candidate.birthdate)}</span>
-            </div>
-            <div className="flex items-center space-x-2 mt-2">
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 backdrop-blur-sm">
-                {candidate.gender}
-              </span>
-              <span className="text-xs text-slate-300 font-medium drop-shadow-sm">
-                {candidate.distance.toFixed(1)} km away
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Bio Section */}
-        {candidate.bio && (
-          <div className="p-6">
-            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">About Me</h4>
-            <p className="text-base text-slate-200 leading-relaxed">{candidate.bio}</p>
-          </div>
-        )}
-
-        {/* Interests & Details */}
-        <div className="px-6 pb-6 space-y-4">
-          {candidate.interests && candidate.interests.length > 0 && (
-            <div>
-              <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Interests</h4>
-              <div className="flex flex-wrap gap-2">
-                {candidate.interests.map((interest, idx) => (
-                  <span key={idx} className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold">
-                    {interest}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Info Pills */}
-          <div className="flex flex-wrap gap-2">
-            {candidate.job && (
-              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-                💼 <span>{candidate.job}</span>
-              </span>
-            )}
-            {candidate.education && (
-              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-                🎓 <span>{candidate.education}</span>
-              </span>
-            )}
-            {candidate.height && (
-              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-                📏 <span>{candidate.height} cm</span>
-              </span>
-            )}
-            {candidate.weight && (
-              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-                ⚖️ <span>{candidate.weight} kg</span>
-              </span>
-            )}
-            {candidate.gym && (
-              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-                💪 <span>Gym: {candidate.gym}</span>
-              </span>
-            )}
-            {candidate.drinking && (
-              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-                🍷 <span>Drinks: {candidate.drinking}</span>
-              </span>
-            )}
-            {candidate.smoking && (
-              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-                🚬 <span>Smokes: {candidate.smoking}</span>
-              </span>
-            )}
-            {candidate.favoriteSpot && (
-              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-                📍 <span>Fav spot: {candidate.favoriteSpot}</span>
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Interleaved Prompts and Other Photos */}
-        <div className="flex flex-col space-y-4 px-4 pb-6 mt-4">
-          {Array.from({ length: Math.max(otherPhotos.length, candidate.prompts?.length || 0) }).map((_, i) => (
-            <React.Fragment key={i}>
-              {candidate.prompts?.[i] && candidate.prompts[i].question && candidate.prompts[i].answer && (
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50">
-                  <p className="text-xs text-rose-400 font-bold mb-2 uppercase tracking-wider">
-                    {candidate.prompts[i].question}
-                  </p>
-                  <p className="text-lg text-slate-200 font-serif italic">"{candidate.prompts[i].answer}"</p>
-                </div>
-              )}
-              {otherPhotos[i] && (
-                <div className="w-full rounded-2xl overflow-hidden shadow-lg aspect-[3/4]">
-                  <img
-                    src={
-                      otherPhotos[i].url.startsWith('/uploads')
-                        ? `${API_URL.replace('/api', '')}${otherPhotos[i].url}`
-                        : otherPhotos[i].url
-                    }
-                    alt={`${candidate.name} detail`}
-                    className="w-full h-full object-cover select-none pointer-events-none"
-                  />
-                </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </>
-    );
   };
 
   const currentCandidate = candidates[currentIndex];
@@ -403,15 +235,23 @@ export default function SwipePage() {
             /* Scrollable Profile Card Stack */
             <div className="relative w-full max-w-sm h-[75vh] md:h-[80vh] rounded-3xl overflow-hidden shadow-2xl glass border border-slate-800/80 bg-slate-950">
               
-              {/* Background Card (Next Candidate) */}
-              {nextCandidate && (
-                <div 
-                  className="absolute inset-0 overflow-y-auto scrollbar-hide pb-28 z-10 bg-slate-950 scale-95 opacity-60 pointer-events-none transform origin-bottom transition-all duration-300"
-                  key={nextCandidate.id}
-                >
-                  {renderCardContent(nextCandidate, false)}
-                </div>
-              )}
+              {/* Background Card (Next Candidate or End of Stack) */}
+              <motion.div 
+                className="absolute inset-0 overflow-hidden pb-28 z-10 bg-slate-950 opacity-50 pointer-events-none transform origin-bottom transition-all duration-300 flex flex-col items-center justify-center rounded-3xl border border-slate-800"
+                style={{ scale: bgScale, filter: bgFilter }}
+              >
+                {nextCandidate ? (
+                  <div className="w-full h-full relative">
+                    <ProfileCardContent candidate={nextCandidate} isTop={false} />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center px-6">
+                    <Star className="w-16 h-16 text-rose-500/30 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-slate-100">You've seen everyone!</h3>
+                    <p className="text-slate-400 mt-2 text-sm">Adjust filters to see more.</p>
+                  </div>
+                )}
+              </motion.div>
 
               {/* Foreground Card (Current Candidate) */}
               <motion.div 
@@ -423,7 +263,12 @@ export default function SwipePage() {
                 style={{ x, rotate: rotation }}
                 animate={controls}
               >
-                {renderCardContent(currentCandidate, true)}
+                <ProfileCardContent 
+                  candidate={currentCandidate} 
+                  isTop={true} 
+                  likeOpacity={likeOpacity} 
+                  passOpacity={passOpacity} 
+                />
               </motion.div>
 
               {/* Sticky Action Buttons */}

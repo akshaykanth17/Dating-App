@@ -4,8 +4,9 @@ import { api } from '../services/api';
 import Layout from '../components/Layout';
 import {
   Calendar, MapPin, Clock, Plus, Heart, X, User as UserIcon,
-  RefreshCw, ChevronDown, Map,
+  RefreshCw, Map
 } from 'lucide-react';
+import ProfileCardContent from '../components/ProfileCardContent';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Photo {
@@ -434,99 +435,27 @@ export default function HangoutsPage() {
             className="glass w-full max-w-lg rounded-t-3xl border border-slate-800 overflow-hidden max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Drag Handle */}
-            <div className="w-full flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 bg-slate-700 rounded-full" />
+            <div className="w-full relative h-[70vh] overflow-y-auto scrollbar-hide pb-28">
+              <ProfileCardContent candidate={selectedCreator as any} />
             </div>
 
-            {/* Hero Photo */}
-            <div className="relative h-72">
-              {primaryPhoto(selectedCreator) ? (
-                <img src={primaryPhoto(selectedCreator)!} className="w-full h-full object-cover" alt={selectedCreator.name} />
-              ) : (
-                <div className="w-full h-full bg-slate-900 flex items-center justify-center">
-                  <UserIcon className="w-24 h-24 text-slate-700" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-5">
-                <h2 className="text-2xl font-black text-white">
-                  {selectedCreator.name}
-                  {selectedCreator.birthdate && (
-                    <span className="text-slate-300 font-normal ml-2">{calculateAge(selectedCreator.birthdate)}</span>
-                  )}
-                </h2>
-                {selectedCreator.gender && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-semibold capitalize">
-                    {selectedCreator.gender}
-                  </span>
-                )}
-              </div>
+            {/* CTA Buttons */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent z-30 flex items-center justify-center space-x-6">
               <button
                 onClick={() => setSelectedCreator(null)}
-                className="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-950/60 backdrop-blur-sm flex items-center justify-center text-white"
+                className="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-500/50 transition-all transform hover:scale-105"
               >
-                <ChevronDown className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
-            </div>
-
-            <div className="p-5 space-y-5">
-              {/* Event Info */}
-              <div className="glass rounded-2xl p-4 border border-slate-700/50 space-y-2">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Their Hangout</p>
-                <h3 className="text-base font-bold text-slate-100">{selectedHangout.title}</h3>
-                <div className="flex items-center space-x-2 text-sm text-slate-300">
-                  <MapPin className="w-4 h-4 text-rose-500 flex-shrink-0" />
-                  <span>{selectedHangout.location}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-emerald-400">
-                  <Clock className="w-4 h-4 flex-shrink-0" />
-                  <span>{formatEventDate(selectedHangout.eventDate)}</span>
-                </div>
-              </div>
-
-              {/* Bio */}
-              {selectedCreator.bio && (
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">About</p>
-                  <p className="text-sm text-slate-300 leading-relaxed">{selectedCreator.bio}</p>
-                </div>
-              )}
-
-              {/* Other photos */}
-              {selectedCreator.photos.length > 1 && (
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Photos</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {selectedCreator.photos.map((photo) => (
-                      <div key={photo.id} className="aspect-square rounded-xl overflow-hidden bg-slate-900">
-                        <img src={getPhotoUrl(photo.url)} className="w-full h-full object-cover" alt="" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* CTA Buttons */}
-              <div className="grid grid-cols-2 gap-3 pb-4">
-                <button
-                  onClick={() => setSelectedCreator(null)}
-                  className="py-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-sm font-bold hover:bg-slate-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <X className="w-4 h-4" />
-                  <span>Pass</span>
-                </button>
-                <button
-                  onClick={async () => {
-                    setSelectedCreator(null);
-                    await handleLike();
-                  }}
-                  className="py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold transition-colors flex items-center justify-center space-x-2 shadow-[0_0_15px_rgba(244,63,94,0.3)]"
-                >
-                  <Heart className="w-4 h-4 fill-white" />
-                  <span>I'm Joining!</span>
-                </button>
-              </div>
+              <button
+                onClick={async () => {
+                  setSelectedCreator(null);
+                  await handleLike();
+                }}
+                className="w-16 h-16 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg hover:bg-rose-500 transition-all transform hover:scale-105"
+              >
+                <Heart className="w-7 h-7 fill-white" />
+              </button>
             </div>
           </div>
         </div>
