@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import Layout from '../components/Layout';
-import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, User as UserIcon, Hand } from 'lucide-react';
+import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, User as UserIcon } from 'lucide-react';
 import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from 'framer-motion';
 
 interface Candidate {
@@ -59,7 +59,26 @@ export default function SwipePage() {
     setIsLoading(true);
     try {
       const data = await api.get<Candidate[]>('/swipes/discovery');
-      setCandidates(data);
+      
+      const hasSeen = localStorage.getItem('heartsync_swipe_tutorial');
+      let initialCandidates = data;
+      
+      if (!hasSeen) {
+        const dummyProfile: Candidate = {
+          id: 'tutorial-profile',
+          userId: 'tutorial-user',
+          name: 'Dislike to left, Like to right',
+          birthdate: new Date(new Date().setFullYear(new Date().getFullYear() - 22)).toISOString(),
+          gender: 'Welcome',
+          bio: '👋 Welcome to HeartSync! I am a tutorial profile to help you get started.\n\nPractice your swiping on me! \n👉 Swipe RIGHT or click the Heart to LIKE.\n👈 Swipe LEFT or click the X to PASS.',
+          distance: 0.1,
+          photos: [{ id: 'tutorial-pic', url: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&fit=crop&q=80', isPrimary: true }],
+          interests: ['HeartSync', 'Tutorial', 'Matches'],
+        };
+        initialCandidates = [dummyProfile, ...data];
+      }
+      
+      setCandidates(initialCandidates);
       setCurrentIndex(0);
     } catch (error) {
       console.error('[SwipePage] Failed to fetch discovery candidates:', error);
@@ -71,8 +90,6 @@ export default function SwipePage() {
   useEffect(() => {
     if (user?.isVerified) {
       fetchCandidates();
-      const hasSeen = localStorage.getItem('heartsync_swipe_tutorial');
-      if (!hasSeen) setShowTutorial(true);
     } else {
       setIsLoading(false);
     }
@@ -101,6 +118,11 @@ export default function SwipePage() {
     
     // Optimistically advance card
     setCurrentIndex((prev) => prev + 1);
+
+    if (currentCandidate.id === 'tutorial-profile') {
+      dismissTutorial();
+      return; // Do not send API request for tutorial profile
+    }
 
     try {
       const res = await api.post<any>('/swipes', {
@@ -233,16 +255,7 @@ export default function SwipePage() {
                 style={{ x, rotate: rotation }}
                 animate={controls}
               >
-                {showTutorial && (
-                  <div className="absolute inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none rounded-3xl">
-                    <Hand className="w-16 h-16 text-white mb-4 animate-bounce" />
-                    <p className="text-white font-bold text-lg text-center px-6 leading-relaxed">
-                      Swipe <span className="text-rose-400">Right</span> to Like<br />
-                      Swipe <span className="text-slate-400">Left</span> to Pass
-                    </p>
-                    <p className="text-slate-400 text-sm mt-4">Drag the card to see the magic!</p>
-                  </div>
-                )}
+
                 
                 {/* LIKE / PASS Stamps */}
                 <motion.div
