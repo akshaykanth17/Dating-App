@@ -5,7 +5,7 @@ import { Heart, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-rea
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, loginWithFirebaseToken, demoLogin } = useAuth();
+  const { login, loginWithFirebaseToken } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,18 +56,6 @@ export default function Login() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      await demoLogin();
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Demo login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
@@ -167,16 +155,7 @@ export default function Login() {
             <Link to="/register" className="text-rose-400 hover:text-rose-300 font-semibold">Register</Link>
           </p>
 
-          {/* Demo Login */}
-          <div className="pt-2 border-t border-slate-800">
-            <button
-              onClick={handleDemoLogin}
-              disabled={loading || googleLoading}
-              className="w-full py-2.5 rounded-xl border border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-600 text-xs font-medium transition-colors"
-            >
-              🧪 Demo Login (for testing)
-            </button>
-          </div>
+
         </div>
       </div>
     </div>
