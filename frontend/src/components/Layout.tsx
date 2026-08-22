@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Flame, MessageSquare, User, LogOut, CircleUser, Map } from 'lucide-react';
+import { Flame, MessageSquare, User, LogOut, CircleUser, Map, MapPin } from 'lucide-react';
+import { reverseGeocode } from '../utils/location';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,14 @@ export default function Layout({ children }: LayoutProps) {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const [locationName, setLocationName] = React.useState('');
+
+  React.useEffect(() => {
+    if (user?.profile?.latitude && user?.profile?.longitude) {
+      reverseGeocode(user.profile.latitude, user.profile.longitude).then(setLocationName);
+    }
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -32,7 +41,15 @@ export default function Layout({ children }: LayoutProps) {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Flame className="w-8 h-8 text-rose-500 fill-rose-500 animate-pulse" />
-            <span className="text-xl font-bold tracking-tight text-gradient bg-clip-text">HeartSync</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold tracking-tight text-gradient bg-clip-text leading-none">HeartSync</span>
+              {locationName && (
+                <span className="text-[10px] text-slate-400 font-medium flex items-center mt-0.5">
+                  <MapPin className="w-3 h-3 mr-0.5 text-rose-500" />
+                  {locationName}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Desktop Navigation */}
