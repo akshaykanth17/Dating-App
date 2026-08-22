@@ -70,7 +70,7 @@ export default function SwipePage() {
           name: 'Dislike to left, Like to right',
           birthdate: new Date(new Date().setFullYear(new Date().getFullYear() - 22)).toISOString(),
           gender: 'Welcome',
-          bio: '👋 Welcome to HeartSync! I am a tutorial profile to help you get started.\n\nPractice your swiping on me! \n👉 Swipe RIGHT or click the Heart to LIKE.\n👈 Swipe LEFT or click the X to PASS.',
+          bio: '👋 Welcome to HeartSync! I am a tutorial profile to help you get started.\n\nPractice your swiping on me! \n👉 Swipe RIGHT or click the Heart to LIKE.\n👈 Swipe LEFT or click the X to DISLIKE.',
           distance: 0.1,
           photos: [{ id: 'tutorial-pic', url: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&fit=crop&q=80', isPrimary: true }],
           interests: ['HeartSync', 'Tutorial', 'Matches'],
@@ -268,7 +268,7 @@ export default function SwipePage() {
                   className="absolute top-10 right-6 z-40 px-6 py-2 rounded-xl border-4 border-rose-500 text-rose-400 font-black text-3xl tracking-widest rotate-[12deg] pointer-events-none"
                   style={{ opacity: passOpacity }}
                 >
-                  PASS
+                  DISLIKE
                 </motion.div>
 
                 {/* Primary Image Section */}
