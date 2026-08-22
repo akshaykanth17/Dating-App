@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
-import { CircleUser, Trash2, Upload, RefreshCw } from 'lucide-react';
+import { CircleUser, Trash2, Upload, RefreshCw, X } from 'lucide-react';
+
+const INTEREST_OPTIONS = [
+  'Movies', 'Coffee', 'Hiking', 'Photography', 'Foodie', 'Travel', 
+  'Reading', 'Music', 'Gaming', 'Fitness', 'Art', 'Dancing', 
+  'Cooking', 'Fashion', 'Pets', 'Sports', 'Technology', 'Yoga', 'Anime', 'Board Games'
+];
 
 interface Photo {
   id: string;
@@ -20,6 +26,17 @@ interface ProfileData {
   longitude: number;
   gendersInterestedIn: string[];
   photos: Photo[];
+  interests?: string[];
+  prompts?: { question: string; answer: string }[];
+  favoriteSpot?: string;
+  job?: string;
+  education?: string;
+  drinking?: string;
+  smoking?: string;
+  gym?: string;
+  height?: number;
+  weight?: number;
+  completionPercentage?: number;
 }
 
 export default function ProfilePage() {
@@ -32,6 +49,20 @@ export default function ProfilePage() {
   const [birthdate, setBirthdate] = useState('');
   const [gendersInterested, setGendersInterested] = useState<string[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  
+  // New profile fields
+  const [interests, setInterests] = useState<string[]>([]);
+  const [interestInput, setInterestInput] = useState('');
+  const [prompts, setPrompts] = useState<{ question: string; answer: string }[]>([{ question: 'First date will be like...', answer: '' }]);
+  const [favoriteSpot, setFavoriteSpot] = useState('');
+  const [job, setJob] = useState('');
+  const [education, setEducation] = useState('');
+  const [drinking, setDrinking] = useState('');
+  const [smoking, setSmoking] = useState('');
+  const [gym, setGym] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [completionPercentage, setCompletionPercentage] = useState(0);
 
   // Status states
   const [profileSuccess, setProfileSuccess] = useState('');
@@ -54,6 +85,19 @@ export default function ProfilePage() {
           // Format for HTML5 date input (YYYY-MM-DD)
           setBirthdate(new Date(data.birthdate).toISOString().split('T')[0]);
         }
+        
+        if (data.interests?.length) setInterests(data.interests);
+        if (data.prompts?.length) setPrompts(data.prompts);
+        if (data.favoriteSpot) setFavoriteSpot(data.favoriteSpot);
+        if (data.job) setJob(data.job);
+        if (data.education) setEducation(data.education);
+        if (data.drinking) setDrinking(data.drinking);
+        if (data.smoking) setSmoking(data.smoking);
+        if (data.gym) setGym(data.gym);
+        if (data.height) setHeight(data.height.toString());
+        if (data.weight) setWeight(data.weight.toString());
+        if (data.completionPercentage) setCompletionPercentage(data.completionPercentage);
+
         updateUserProfile(data);
       } catch (err) {
         console.error('[ProfilePage] Failed to fetch profile details:', err);
@@ -74,6 +118,16 @@ export default function ProfilePage() {
         bio,
         gender,
         gendersInterestedIn: gendersInterested,
+        interests: interests,
+        prompts: prompts.filter(p => p.question.trim() && p.answer.trim()),
+        favoriteSpot,
+        job,
+        education,
+        drinking,
+        smoking,
+        gym,
+        height: height ? Number(height) : undefined,
+        weight: weight ? Number(weight) : undefined,
       };
 
       if (birthdate) {
@@ -82,6 +136,7 @@ export default function ProfilePage() {
 
       const updated = await api.put<any>('/profiles/me', payload);
       setProfileSuccess('Profile details updated successfully!');
+      if (updated.completionPercentage) setCompletionPercentage(updated.completionPercentage);
       updateUserProfile(updated);
     } catch (err: any) {
       setProfileError(err.message || 'Failed to update profile.');
@@ -92,11 +147,42 @@ export default function ProfilePage() {
 
   // Upload image
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const originalFile = e.target.files?.[0];
+    if (!originalFile) return;
 
     setIsUploadingPhoto(true);
     setProfileError('');
+
+    let file = originalFile;
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+    // Handle HEIC/HEIF format conversions for Apple devices
+    if (ext === 'heic' || ext === 'heif') {
+      try {
+        const heic2any = (await import('heic2any')).default;
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: "image/jpeg",
+          quality: 0.8
+        });
+        const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        const newName = file.name.replace(/\.(heic|heif)$/i, '.jpg');
+        file = new File([finalBlob], newName, { type: 'image/jpeg' });
+      } catch (err) {
+        console.error("HEIC conversion error:", err);
+        setProfileError("Failed to process HEIC file. Please try another image.");
+        setIsUploadingPhoto(false);
+        return;
+      }
+    } else if (!file.type || !file.type.startsWith('image/')) {
+      if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+        setProfileError('Please select a valid image file (JPG, PNG, GIF, WEBP, HEIC).');
+        setIsUploadingPhoto(false);
+        return;
+      }
+      const type = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+      file = new File([originalFile], originalFile.name, { type });
+    }
 
     const formData = new FormData();
     formData.append('photo', file);
@@ -153,13 +239,49 @@ export default function ProfilePage() {
     return url.startsWith('/uploads') ? `${API_URL.replace('/api', '')}${url}` : url;
   };
 
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  const getAge = (birthdateString: string): number => {
+    if (!birthdateString) return 18;
+    const today = new Date();
+    const birthDate = new Date(birthdateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const primaryPreviewPhoto = photos.find(p => p.isPrimary) || photos[0];
+  const otherPreviewPhotos = photos.filter(p => p.id !== primaryPreviewPhoto?.id);
+
   return (
     <Layout>
       <div className="space-y-8 max-w-4xl mx-auto pb-12">
-        <h1 className="text-3xl font-extrabold text-slate-100 flex items-center space-x-2">
-          <CircleUser className="w-8 h-8 text-rose-500" />
-          <span>My Profile</span>
-        </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-100 flex items-center space-x-2">
+              <CircleUser className="w-8 h-8 text-rose-500" />
+              <span>My Profile</span>
+            </h1>
+            <div className="mt-2 flex items-center space-x-3">
+              <div className="text-xs text-slate-400 font-bold">Profile Completion</div>
+              <div className="w-32 h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-rose-500 to-amber-500" style={{ width: `${completionPercentage}%` }}></div>
+              </div>
+              <div className="text-xs text-rose-400 font-bold">{completionPercentage}%</div>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setShowPreviewModal(true);
+            }}
+            className="px-6 py-2.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-300 text-sm font-bold shadow-md transition-colors"
+          >
+            Preview Profile
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left: Photos list */}
@@ -219,7 +341,7 @@ export default function ProfilePage() {
                       <span className="text-xs text-slate-500">Upload Photo</span>
                     </>
                   )}
-                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
+                  <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
                 </label>
               )}
             </div>
@@ -302,7 +424,135 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="pt-4 flex items-center justify-between border-t border-slate-800/50">
+                <div className="border-t border-slate-800/50 pt-6 mt-6">
+                  <h4 className="text-sm font-bold text-slate-200 mb-4">More Details</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Interests</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {interests.map((interest, idx) => (
+                          <span key={idx} className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold flex items-center space-x-1">
+                            <span>{interest}</span>
+                            <button type="button" onClick={() => setInterests(interests.filter((_, i) => i !== idx))} className="text-slate-500 hover:text-rose-400 ml-1">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <div className="relative">
+                        <input 
+                          type="text" 
+                          placeholder="Type to search interests (e.g. Movies)..." 
+                          value={interestInput} 
+                          onChange={(e) => setInterestInput(e.target.value)} 
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (interestInput.trim() && !interests.includes(interestInput.trim())) {
+                                setInterests([...interests, interestInput.trim()]);
+                                setInterestInput('');
+                              }
+                            }
+                          }}
+                          className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500" 
+                        />
+                        {interestInput && (
+                          <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-lg max-h-40 overflow-y-auto">
+                            {INTEREST_OPTIONS.filter(i => i.toLowerCase().includes(interestInput.toLowerCase()) && !interests.includes(i)).map((option, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  setInterests([...interests, option]);
+                                  setInterestInput('');
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-slate-200 hover:bg-slate-700"
+                              >
+                                {option}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Profile Prompts</label>
+                      {prompts.map((prompt, idx) => (
+                        <div key={idx} className="space-y-2 mb-2">
+                          <input type="text" placeholder="Prompt Question" value={prompt.question} onChange={e => {
+                            const newPrompts = [...prompts];
+                            newPrompts[idx].question = e.target.value;
+                            setPrompts(newPrompts);
+                          }} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-rose-500" />
+                          <textarea rows={2} placeholder="Your Answer..." value={prompt.answer} onChange={e => {
+                            const newPrompts = [...prompts];
+                            newPrompts[idx].answer = e.target.value;
+                            setPrompts(newPrompts);
+                          }} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 resize-none" />
+                        </div>
+                      ))}
+                      {prompts.length < 3 && (
+                        <button type="button" onClick={() => setPrompts([...prompts, { question: '', answer: '' }])} className="text-xs text-rose-500 font-bold hover:text-rose-400">
+                          + Add another prompt
+                        </button>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Favorite Spot</label>
+                      <input type="text" value={favoriteSpot} onChange={(e) => setFavoriteSpot(e.target.value)} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Job</label>
+                        <input type="text" value={job} onChange={(e) => setJob(e.target.value)} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Education</label>
+                        <input type="text" value={education} onChange={(e) => setEducation(e.target.value)} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Drinking</label>
+                        <select value={drinking} onChange={(e) => setDrinking(e.target.value)} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500">
+                          <option value="">Skip</option>
+                          <option value="yes">Yes</option>
+                          <option value="no">No</option>
+                          <option value="sometimes">Sometimes</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Smoking</label>
+                        <select value={smoking} onChange={(e) => setSmoking(e.target.value)} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500">
+                          <option value="">Skip</option>
+                          <option value="yes">Yes</option>
+                          <option value="no">No</option>
+                          <option value="sometimes">Sometimes</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Gym</label>
+                        <select value={gym} onChange={(e) => setGym(e.target.value)} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500">
+                          <option value="">Skip</option>
+                          <option value="active">Active</option>
+                          <option value="sometimes">Sometimes</option>
+                          <option value="rarely">Rarely</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Height & Weight</label>
+                        <div className="flex space-x-2">
+                          <input type="number" placeholder="cm" value={height} onChange={(e) => setHeight(e.target.value)} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500" />
+                          <input type="number" placeholder="kg" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 flex items-center justify-between border-t border-slate-800/50 mt-6">
                   <span className="text-xs text-slate-500">
                     Location GPS: {user?.profile?.latitude?.toFixed(4)}, {user?.profile?.longitude?.toFixed(4)}
                   </span>
@@ -319,6 +569,127 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Preview Modal Overlay */}
+      {showPreviewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+          <div className="absolute top-4 right-4">
+            <button
+              onClick={() => setShowPreviewModal(false)}
+              className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
+            >
+              <Trash2 className="w-6 h-6 hidden" /> {/* Just to keep the import clean, we'll use an X. wait no, let's use a standard close button */}
+              <span className="font-bold text-xl">✕</span>
+            </button>
+          </div>
+          
+          <div className="text-center mb-6 absolute top-10 w-full pointer-events-none">
+            <h2 className="text-xl font-bold text-slate-200">This is how others see you</h2>
+            <p className="text-sm text-slate-400">Preview mode</p>
+          </div>
+
+          <div className="relative w-full max-w-sm h-[75vh] md:h-[80vh] rounded-3xl overflow-hidden shadow-2xl glass border border-slate-800/80 mt-16 flex flex-col bg-slate-950">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide pb-10">
+              
+              {/* Primary Image Section */}
+              <div className="relative w-full aspect-[3/4] md:aspect-[3.2/4]">
+                {primaryPreviewPhoto ? (
+                  <img
+                    src={getPhotoUrl(primaryPreviewPhoto?.url)}
+                    alt={name}
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-slate-900">
+                    <CircleUser className="w-20 h-20" />
+                    <span className="text-xs mt-2">No photo uploaded</span>
+                  </div>
+                )}
+                {/* Visual Vignette overlay for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                
+                {/* Profile Basic Info Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col pointer-events-none">
+                  <div className="flex items-baseline space-x-2">
+                    <h3 className="text-3xl font-black text-slate-100 drop-shadow-md">{name || 'Your Name'}</h3>
+                    <span className="text-2xl font-bold text-slate-300 drop-shadow-md">{birthdate ? getAge(birthdate) : 18}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 backdrop-blur-sm">
+                      {gender}
+                    </span>
+                    <span className="text-xs text-slate-300 font-medium drop-shadow-sm">
+                      0.0 km away
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bio Section */}
+              {bio && (
+                <div className="p-6">
+                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">About Me</h4>
+                  <p className="text-base text-slate-200 leading-relaxed">
+                    {bio}
+                  </p>
+                </div>
+              )}
+
+              {/* Interests & Details */}
+              <div className="px-6 pb-6 space-y-4">
+                {interests.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Interests</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {interests.map((interest, idx) => (
+                        <span key={idx} className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold">
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Info Pills */}
+                <div className="flex flex-wrap gap-2">
+                  {job && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">💼 <span>{job}</span></span>}
+                  {education && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🎓 <span>{education}</span></span>}
+                  {height && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">📏 <span>{height} cm</span></span>}
+                  {weight && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">⚖️ <span>{weight} kg</span></span>}
+                  {gym && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">💪 <span>Gym: {gym}</span></span>}
+                  {drinking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🍷 <span>Drinks: {drinking}</span></span>}
+                  {smoking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🚬 <span>Smokes: {smoking}</span></span>}
+                  {favoriteSpot && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">📍 <span>Fav spot: {favoriteSpot}</span></span>}
+                </div>
+              </div>
+
+              {/* Interleaved Prompts and Other Photos */}
+              <div className="flex flex-col space-y-4 px-4 pb-6 mt-4">
+                {Array.from({ length: Math.max(otherPreviewPhotos.length, prompts.length) }).map((_, i) => (
+                  <React.Fragment key={i}>
+                    {prompts[i] && prompts[i].question && prompts[i].answer && (
+                      <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50">
+                        <p className="text-xs text-rose-400 font-bold mb-2 uppercase tracking-wider">{prompts[i].question}</p>
+                        <p className="text-lg text-slate-200 font-serif italic">"{prompts[i].answer}"</p>
+                      </div>
+                    )}
+                    {otherPreviewPhotos[i] && (
+                      <div className="w-full rounded-2xl overflow-hidden shadow-lg aspect-[3/4]">
+                        <img
+                          src={getPhotoUrl(otherPreviewPhotos[i].url)}
+                          alt={`${name} detail`}
+                          className="w-full h-full object-cover select-none pointer-events-none"
+                        />
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

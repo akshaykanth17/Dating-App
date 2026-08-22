@@ -10,8 +10,11 @@ generator client {
 model User {
   id                   String    @id @default(uuid())
   email                String    @unique
-  passwordHash         String
+  passwordHash         String?
+  firebaseUid          String?   @unique
+  authProvider         String    @default("email")
   isVerified           Boolean   @default(false)
+  isOnboarded          Boolean   @default(false)
   verificationToken    String?
   passwordResetToken   String?
   passwordResetExpires DateTime?
@@ -50,11 +53,35 @@ model Profile {
   ageInterestedInMax   Int      @default(100)
   distanceInterestedIn Int      @default(50) // in kilometers
   gendersInterestedIn  String[] // Array of genders, e.g. ["male", "female"]
+  
+  // New detailed fields
+  interests            String[]
+  favoriteSpot         String?
+  job                  String?
+  education            String?
+  drinking             String?
+  smoking              String?
+  gym                  String?
+  height               Int?     // in cm
+  weight               Int?     // in kg
+
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   photos               Photo[]
+  prompts              Prompt[]
 
   @@index([latitude, longitude])
+}
+
+model Prompt {
+  id        String   @id @default(uuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([profileId])
 }
 
 model Photo {

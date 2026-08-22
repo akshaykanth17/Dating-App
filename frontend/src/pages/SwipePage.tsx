@@ -4,7 +4,8 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import Layout from '../components/Layout';
-import { X, Heart, ShieldAlert, ArrowLeft, ArrowRight, Star, RefreshCw, AlertCircle, User as UserIcon } from 'lucide-react';
+import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, User as UserIcon, Hand } from 'lucide-react';
+import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from 'framer-motion';
 
 interface Candidate {
   id: string;
@@ -15,6 +16,16 @@ interface Candidate {
   bio: string;
   distance: number;
   photos: { id: string; url: string; isPrimary: boolean }[];
+  interests?: string[];
+  prompts?: { question: string; answer: string }[];
+  favoriteSpot?: string;
+  job?: string;
+  education?: string;
+  drinking?: string;
+  smoking?: string;
+  gym?: string;
+  height?: number;
+  weight?: number;
 }
 
 export default function SwipePage() {
@@ -24,7 +35,6 @@ export default function SwipePage() {
 
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [photoIndexes, setPhotoIndexes] = useState<Record<string, number>>({}); // tracks current photo index per profile
   const [isLoading, setIsLoading] = useState(true);
   const [swipeResult, setSwipeResult] = useState<any>(null); // controls Mutual Match modal
 
@@ -33,6 +43,15 @@ export default function SwipePage() {
   const [reportReason, setReportReason] = useState('inappropriate_bio');
   const [reportNote, setReportNote] = useState('');
   const [safetyActionType, setSafetyActionType] = useState<'block' | 'report'>('block');
+
+  // Swipe Animation and Tutorial State
+  const [showTutorial, setShowTutorial] = useState(false);
+  const x = useMotionValue(0);
+  const controls = useAnimation();
+  
+  const rotation = useTransform(x, [-200, 200], [-15, 15]);
+  const likeOpacity = useTransform(x, [0, 150], [0, 1]);
+  const passOpacity = useTransform(x, [0, -150], [0, 1]);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -52,10 +71,17 @@ export default function SwipePage() {
   useEffect(() => {
     if (user?.isVerified) {
       fetchCandidates();
+      const hasSeen = localStorage.getItem('heartsync_swipe_tutorial');
+      if (!hasSeen) setShowTutorial(true);
     } else {
       setIsLoading(false);
     }
   }, [user]);
+
+  const dismissTutorial = () => {
+    setShowTutorial(false);
+    localStorage.setItem('heartsync_swipe_tutorial', 'true');
+  };
 
   const getAge = (birthdateString: string): number => {
     const today = new Date();
@@ -95,21 +121,34 @@ export default function SwipePage() {
     }
   };
 
-  // Photo carousel navigation
-  const nextPhoto = (candidateId: string, photosLength: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPhotoIndexes((prev) => ({
-      ...prev,
-      [candidateId]: ((prev[candidateId] || 0) + 1) % photosLength,
-    }));
+  const handleDragEnd = async (_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (showTutorial) dismissTutorial();
+    const swipeThreshold = 100;
+    if (info.offset.x > swipeThreshold) {
+      await controls.start({ x: 500, opacity: 0, transition: { duration: 0.3 } });
+      handleSwipe('LIKE');
+      x.set(0);
+      controls.set({ x: 0, opacity: 1 });
+    } else if (info.offset.x < -swipeThreshold) {
+      await controls.start({ x: -500, opacity: 0, transition: { duration: 0.3 } });
+      handleSwipe('PASS');
+      x.set(0);
+      controls.set({ x: 0, opacity: 1 });
+    } else {
+      controls.start({ x: 0, transition: { type: 'spring', stiffness: 300, damping: 20 } });
+    }
   };
 
-  const prevPhoto = (candidateId: string, photosLength: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPhotoIndexes((prev) => ({
-      ...prev,
-      [candidateId]: ((prev[candidateId] || 0) - 1 + photosLength) % photosLength,
-    }));
+  const handleSwipeClick = async (type: 'LIKE' | 'PASS') => {
+    if (showTutorial) dismissTutorial();
+    if (type === 'LIKE') {
+      await controls.start({ x: 500, opacity: 0, transition: { duration: 0.3 } });
+    } else {
+      await controls.start({ x: -500, opacity: 0, transition: { duration: 0.3 } });
+    }
+    handleSwipe(type);
+    x.set(0);
+    controls.set({ x: 0, opacity: 1 });
   };
 
   // Block & Report API handles
@@ -132,13 +171,18 @@ export default function SwipePage() {
       setCurrentIndex((prev) => prev + 1);
       setShowSafetyModal(false);
       setReportNote('');
+      // Reset scroll position if needed, though component re-render might handle it
     } catch (error: any) {
       alert(error.message || 'Action failed.');
     }
   };
 
   const currentCandidate = candidates[currentIndex];
-  const currentPhotoIdx = currentCandidate ? (photoIndexes[currentCandidate.id] || 0) : 0;
+  
+  // Prepare photos for scrollable view
+  const primaryPhoto = currentCandidate?.photos?.find(p => p.isPrimary) || currentCandidate?.photos?.[0];
+  const otherPhotos = currentCandidate?.photos?.filter(p => p.id !== primaryPhoto?.id) || [];
+
 
   return (
     <Layout>
@@ -176,114 +220,174 @@ export default function SwipePage() {
               </button>
             </div>
           ) : (
-            /* Premium Swipe Deck Card */
-            <div className="relative w-full max-w-sm aspect-[3/4] md:aspect-[3.2/4] rounded-3xl overflow-hidden shadow-2xl glass border border-slate-800/80">
+            /* Scrollable Profile Card */
+            <div className="relative w-full max-w-sm h-[75vh] md:h-[80vh] rounded-3xl overflow-hidden shadow-2xl glass border border-slate-800/80 flex flex-col bg-slate-950">
               
-              {/* Image Carousel */}
-              <div className="absolute inset-0 bg-slate-900">
-                {currentCandidate.photos && currentCandidate.photos.length > 0 ? (
-                  <img
-                    src={currentCandidate.photos[currentPhotoIdx]?.url.startsWith('/uploads')
-                      ? `${API_URL.replace('/api', '')}${currentCandidate.photos[currentPhotoIdx].url}`
-                      : currentCandidate.photos[currentPhotoIdx]?.url
-                    }
-                    alt={currentCandidate.name}
-                    className="w-full h-full object-cover select-none pointer-events-none"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-slate-900">
-                    <UserIcon className="w-20 h-20" />
-                    <span className="text-xs mt-2">No photo uploaded</span>
+              {/* Scrollable Content */}
+              <motion.div 
+                className="flex-1 overflow-y-auto scrollbar-hide pb-28 cursor-grab active:cursor-grabbing"
+                key={currentCandidate.id}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                onDragEnd={handleDragEnd}
+                style={{ x, rotate: rotation }}
+                animate={controls}
+              >
+                {showTutorial && (
+                  <div className="absolute inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none rounded-3xl">
+                    <Hand className="w-16 h-16 text-white mb-4 animate-bounce" />
+                    <p className="text-white font-bold text-lg text-center px-6 leading-relaxed">
+                      Swipe <span className="text-rose-400">Right</span> to Like<br />
+                      Swipe <span className="text-slate-400">Left</span> to Pass
+                    </p>
+                    <p className="text-slate-400 text-sm mt-4">Drag the card to see the magic!</p>
                   </div>
                 )}
-                {/* Visual Vignette overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
-              </div>
+                
+                {/* LIKE / PASS Stamps */}
+                <motion.div
+                  className="absolute top-10 left-6 z-40 px-6 py-2 rounded-xl border-4 border-emerald-500 text-emerald-400 font-black text-3xl tracking-widest rotate-[-12deg] pointer-events-none"
+                  style={{ opacity: likeOpacity }}
+                >
+                  LIKE
+                </motion.div>
+                <motion.div
+                  className="absolute top-10 right-6 z-40 px-6 py-2 rounded-xl border-4 border-rose-500 text-rose-400 font-black text-3xl tracking-widest rotate-[12deg] pointer-events-none"
+                  style={{ opacity: passOpacity }}
+                >
+                  PASS
+                </motion.div>
 
-              {/* Photo Indicator Dots */}
-              {currentCandidate.photos && currentCandidate.photos.length > 1 && (
-                <div className="absolute top-4 left-0 right-0 flex justify-center space-x-1.5 z-10">
-                  {currentCandidate.photos.map((_, i) => (
-                    <span
-                      key={i}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === currentPhotoIdx ? 'w-6 bg-rose-500' : 'w-1.5 bg-white/40'
-                      }`}
+                {/* Primary Image Section */}
+                <div className="relative w-full aspect-[3/4] md:aspect-[3.2/4]">
+                  {primaryPhoto ? (
+                    <img
+                      src={primaryPhoto.url.startsWith('/uploads')
+                        ? `${API_URL.replace('/api', '')}${primaryPhoto.url}`
+                        : primaryPhoto.url
+                      }
+                      alt={currentCandidate.name}
+                      className="w-full h-full object-cover select-none pointer-events-none"
                     />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-slate-900">
+                      <UserIcon className="w-20 h-20" />
+                      <span className="text-xs mt-2">No photo uploaded</span>
+                    </div>
+                  )}
+                  {/* Visual Vignette overlay for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                  
+                  {/* Profile Basic Info Overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col">
+                    <div className="flex items-baseline space-x-2">
+                      <h3 className="text-3xl font-black text-slate-100 drop-shadow-md">{currentCandidate.name}</h3>
+                      <span className="text-2xl font-bold text-slate-300 drop-shadow-md">{getAge(currentCandidate.birthdate)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 backdrop-blur-sm">
+                        {currentCandidate.gender}
+                      </span>
+                      <span className="text-xs text-slate-300 font-medium drop-shadow-sm">
+                        {currentCandidate.distance.toFixed(1)} km away
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bio Section */}
+                {currentCandidate.bio && (
+                  <div className="p-6">
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">About Me</h4>
+                    <p className="text-base text-slate-200 leading-relaxed">
+                      {currentCandidate.bio}
+                    </p>
+                  </div>
+                )}
+
+                {/* Interests & Details */}
+                <div className="px-6 pb-6 space-y-4">
+                  {currentCandidate.interests && currentCandidate.interests.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Interests</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {currentCandidate.interests.map((interest, idx) => (
+                          <span key={idx} className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold">
+                            {interest}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info Pills */}
+                  <div className="flex flex-wrap gap-2">
+                    {currentCandidate.job && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">💼 <span>{currentCandidate.job}</span></span>}
+                    {currentCandidate.education && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🎓 <span>{currentCandidate.education}</span></span>}
+                    {currentCandidate.height && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">📏 <span>{currentCandidate.height} cm</span></span>}
+                    {currentCandidate.weight && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">⚖️ <span>{currentCandidate.weight} kg</span></span>}
+                    {currentCandidate.gym && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">💪 <span>Gym: {currentCandidate.gym}</span></span>}
+                    {currentCandidate.drinking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🍷 <span>Drinks: {currentCandidate.drinking}</span></span>}
+                    {currentCandidate.smoking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🚬 <span>Smokes: {currentCandidate.smoking}</span></span>}
+                    {currentCandidate.favoriteSpot && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">📍 <span>Fav spot: {currentCandidate.favoriteSpot}</span></span>}
+                  </div>
+                </div>
+
+                {/* Interleaved Prompts and Other Photos */}
+                <div className="flex flex-col space-y-4 px-4 pb-6 mt-4">
+                  {Array.from({ length: Math.max(otherPhotos.length, currentCandidate.prompts?.length || 0) }).map((_, i) => (
+                    <React.Fragment key={i}>
+                      {currentCandidate.prompts?.[i] && currentCandidate.prompts[i].question && currentCandidate.prompts[i].answer && (
+                        <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50">
+                          <p className="text-xs text-rose-400 font-bold mb-2 uppercase tracking-wider">{currentCandidate.prompts[i].question}</p>
+                          <p className="text-lg text-slate-200 font-serif italic">"{currentCandidate.prompts[i].answer}"</p>
+                        </div>
+                      )}
+                      {otherPhotos[i] && (
+                        <div className="w-full rounded-2xl overflow-hidden shadow-lg aspect-[3/4]">
+                          <img
+                            src={otherPhotos[i].url.startsWith('/uploads')
+                              ? `${API_URL.replace('/api', '')}${otherPhotos[i].url}`
+                              : otherPhotos[i].url
+                            }
+                            alt={`${currentCandidate.name} detail`}
+                            className="w-full h-full object-cover select-none pointer-events-none"
+                          />
+                        </div>
+                      )}
+                    </React.Fragment>
                   ))}
                 </div>
-              )}
+              </motion.div>
 
-              {/* Left/Right Click Zones for Image switching */}
-              {currentCandidate.photos && currentCandidate.photos.length > 1 && (
-                <>
-                  <button
-                    onClick={(e) => prevPhoto(currentCandidate.id, currentCandidate.photos.length, e)}
-                    className="absolute top-0 left-0 w-1/3 bottom-24 flex items-center justify-start pl-3 opacity-0 hover:opacity-100 transition-opacity z-10"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-slate-950/60 flex items-center justify-center text-white">
-                      <ArrowLeft className="w-4 h-4" />
-                    </div>
-                  </button>
-                  <button
-                    onClick={(e) => nextPhoto(currentCandidate.id, currentCandidate.photos.length, e)}
-                    className="absolute top-0 right-0 w-1/3 bottom-24 flex items-center justify-end pr-3 opacity-0 hover:opacity-100 transition-opacity z-10"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-slate-950/60 flex items-center justify-center text-white">
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </button>
-                </>
-              )}
+              {/* Sticky Action Buttons */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent z-30 flex items-center justify-center space-x-6">
+                {/* PASS button */}
+                <button
+                  onClick={() => handleSwipeClick('PASS')}
+                  className="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-500/50 hover:shadow-[0_0_20px_rgba(244,63,94,0.2)] transition-all duration-300 transform hover:scale-105"
+                >
+                  <X className="w-6 h-6" />
+                </button>
 
-              {/* Profile Bio Details Box */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col">
-                <div className="flex items-baseline space-x-2">
-                  <h3 className="text-2xl font-black text-slate-100">{currentCandidate.name}</h3>
-                  <span className="text-xl font-bold text-slate-300">{getAge(currentCandidate.birthdate)}</span>
-                </div>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400">
-                    {currentCandidate.gender}
-                  </span>
-                  <span className="text-xs text-slate-400 font-medium">
-                    {currentCandidate.distance.toFixed(1)} km away
-                  </span>
-                </div>
+                {/* Safety / Block button */}
+                <button
+                  onClick={() => {
+                    setSafetyActionType('block');
+                    setShowSafetyModal(true);
+                  }}
+                  className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 hover:text-amber-500 hover:border-amber-500/50 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all duration-300 transform hover:scale-105"
+                >
+                  <ShieldAlert className="w-5 h-5" />
+                </button>
 
-                <p className="text-sm text-slate-300 mt-3 line-clamp-3 leading-relaxed">
-                  {currentCandidate.bio || "No biography provided yet."}
-                </p>
-
-                {/* Primary Interaction Buttons (Swipe Controls) */}
-                <div className="flex items-center justify-center space-x-6 mt-6">
-                  {/* PASS button */}
-                  <button
-                    onClick={() => handleSwipe('PASS')}
-                    className="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-500/50 hover:shadow-[0_0_20px_rgba(244,63,94,0.2)] transition-all duration-300"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-
-                  {/* Safety / Block button */}
-                  <button
-                    onClick={() => {
-                      setSafetyActionType('block');
-                      setShowSafetyModal(true);
-                    }}
-                    className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 hover:text-amber-500 hover:border-amber-500/50 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all duration-300"
-                  >
-                    <ShieldAlert className="w-5 h-5" />
-                  </button>
-
-                  {/* LIKE button */}
-                  <button
-                    onClick={() => handleSwipe('LIKE')}
-                    className="w-14 h-14 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-lg hover:bg-rose-500 hover:shadow-[0_0_25px_rgba(244,63,94,0.45)] transition-all duration-300"
-                  >
-                    <Heart className="w-6 h-6 fill-white" />
-                  </button>
-                </div>
+                {/* LIKE button */}
+                <button
+                  onClick={() => handleSwipeClick('LIKE')}
+                  className="w-14 h-14 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-[0_4px_15px_rgba(244,63,94,0.4)] hover:bg-rose-500 hover:shadow-[0_0_25px_rgba(244,63,94,0.6)] transition-all duration-300 transform hover:scale-105"
+                >
+                  <Heart className="w-6 h-6 fill-white" />
+                </button>
               </div>
             </div>
           )}

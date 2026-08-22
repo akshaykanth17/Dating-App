@@ -35,7 +35,8 @@ export default function Layout({ children }: LayoutProps) {
             <span className="text-xl font-bold tracking-tight text-gradient bg-clip-text">HeartSync</span>
           </div>
 
-          <nav className="flex space-x-1 md:space-x-4">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex space-x-4">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -50,7 +51,7 @@ export default function Layout({ children }: LayoutProps) {
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="hidden md:inline">{item.label}</span>
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -67,14 +68,39 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl flex flex-col justify-center">
+      {/* Added pb-20 on mobile to prevent content from hiding behind the bottom nav */}
+      <main className="flex-1 container mx-auto px-4 py-6 pb-24 md:pb-6 max-w-6xl flex flex-col justify-center">
         {children}
       </main>
 
-      {/* Subtle Premium Footer */}
-      <footer className="py-6 border-t border-slate-900 text-center text-xs text-slate-600">
+      {/* Subtle Premium Footer (Desktop only) */}
+      <footer className="hidden md:block py-6 border-t border-slate-900 text-center text-xs text-slate-600">
         <p>&copy; 2026 HeartSync. 18+ Verification Mandatory. Block and report tools active.</p>
       </footer>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-t border-slate-800" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="flex items-center justify-around h-16 px-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-300 ${
+                  isActive
+                    ? 'text-rose-500'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]' : ''}`} />
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

@@ -13,6 +13,16 @@ export interface DiscoveryCandidate {
   longitude: number;
   distance: number; // calculated in km
   photos: { id: string; url: string; isPrimary: boolean }[];
+  interests?: string[];
+  favoriteSpot?: string;
+  job?: string;
+  education?: string;
+  drinking?: string;
+  smoking?: string;
+  gym?: string;
+  height?: number;
+  weight?: number;
+  prompts?: { question: string; answer: string }[];
 }
 
 export class DiscoveryService {
@@ -62,6 +72,15 @@ export class DiscoveryService {
         p.bio, 
         p.latitude, 
         p.longitude,
+        p.interests,
+        p."favoriteSpot",
+        p.job,
+        p.education,
+        p.drinking,
+        p.smoking,
+        p.gym,
+        p.height,
+        p.weight,
         (6371 * acos(
           LEAST(GREATEST(
             cos(radians(${lat})) * cos(radians(p.latitude)) * 
@@ -122,6 +141,14 @@ export class DiscoveryService {
       orderBy: { isPrimary: 'desc' },
     });
 
+    const prompts = await prisma.prompt.findMany({
+      where: {
+        profile: {
+          userId: { in: candidateUserIds },
+        },
+      },
+    });
+
     return rawCandidates.map((c) => {
       const candidatePhotos = photos
         .filter((p) => p.profileId === c.id)
@@ -129,6 +156,13 @@ export class DiscoveryService {
           id: p.id,
           url: p.url,
           isPrimary: p.isPrimary,
+        }));
+
+      const candidatePrompts = prompts
+        .filter((p) => p.profileId === c.id)
+        .map((p) => ({
+          question: p.question,
+          answer: p.answer,
         }));
 
       return {
@@ -142,6 +176,16 @@ export class DiscoveryService {
         longitude: Number(c.longitude),
         distance: Number(c.distance),
         photos: candidatePhotos,
+        interests: c.interests || [],
+        favoriteSpot: c.favoriteSpot,
+        job: c.job,
+        education: c.education,
+        drinking: c.drinking,
+        smoking: c.smoking,
+        gym: c.gym,
+        height: c.height,
+        weight: c.weight,
+        prompts: candidatePrompts,
       };
     });
   }

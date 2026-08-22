@@ -24,67 +24,34 @@ function getAge(birthdate: Date): number {
 
 export class AuthController {
   static async register(req: Request, res: Response) {
-    const { email, password, name, birthdate, gender, latitude, longitude, gendersInterestedIn } = req.body;
+    const { email, password } = req.body;
 
-    if (!email || !password || !name || !birthdate || !gender || latitude === undefined || longitude === undefined) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const birthDateObj = new Date(birthdate);
-    if (isNaN(birthDateObj.getTime())) {
-      return res.status(400).json({ error: 'Invalid birthdate format' });
-    }
-
-    // 18+ Age Gate Check
-    const age = getAge(birthDateObj);
-    if (age < 18) {
-      return res.status(400).json({ error: 'You must be at least 18 years old to join HeartSync.' });
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
     try {
-      // Check existing user
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) {
         return res.status(400).json({ error: 'Email is already registered' });
       }
 
-      // Hash password
       const passwordHash = await bcrypt.hash(password, 12);
-      const verificationToken = uuidv4();
 
-      // Create user and profile in a single transaction
       const user = await prisma.user.create({
-        data: {
-          email,
-          passwordHash,
-          verificationToken,
-          profile: {
-            create: {
-              name,
-              birthdate: birthDateObj,
-              gender,
-              bio: '',
-              latitude: Number(latitude),
-              longitude: Number(longitude),
-              gendersInterestedIn: gendersInterestedIn || (gender === 'male' ? ['female'] : ['male']),
-            },
-          },
-        },
-        include: {
-          profile: true,
-        },
+        data: { email, passwordHash, isVerified: true, isOnboarded: false },
       });
 
-      // Queue verification email
-      await queueService.addJob('email', 'sendVerification', {
-        email: user.email,
-        token: verificationToken,
-        type: 'verification',
-      });
+      const accessToken = jwt.sign({ userId: user.id }, ACCESS_TOKEN_SECRET, { expiresIn: '7d' });
 
       return res.status(201).json({
-        message: 'Registration successful. A verification email has been sent.',
-        userId: user.id,
+        message: 'Registration successful. Please complete your profile.',
+        accessToken,
+        user: { id: user.id, email: user.email, isVerified: true, isOnboarded: false },
       });
     } catch (error) {
       console.error('[AuthController.register] Error:', error);
@@ -136,42 +103,75 @@ export class AuthController {
         include: { profile: { include: { photos: true } } },
       });
 
-      if (!user) {
+      if (!user || !user.passwordHash) {
         return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-      // Check password match
       const passwordMatch = await bcrypt.compare(password, user.passwordHash);
       if (!passwordMatch) {
         return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-      // Generate tokens
-      const accessToken = jwt.sign({ userId: user.id }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-      const refreshToken = jwt.sign({ userId: user.id }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+      const accessToken = jwt.sign({ userId: user.id }, ACCESS_TOKEN_SECRET, { expiresIn: '7d' });
 
       return res.status(200).json({
         message: 'Login successful',
         accessToken,
-        refreshToken,
         user: {
           id: user.id,
           email: user.email,
           isVerified: user.isVerified,
-          profile: user.profile ? {
-            id: user.profile.id,
-            name: user.profile.name,
-            birthdate: user.profile.birthdate,
-            gender: user.profile.gender,
-            bio: user.profile.bio,
-            latitude: user.profile.latitude,
-            longitude: user.profile.longitude,
-            photos: user.profile.photos,
-          } : null,
+          isOnboarded: user.isOnboarded,
+          authProvider: user.authProvider,
+          profile: user.profile,
         },
       });
     } catch (error) {
       console.error('[AuthController.login] Error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  // GET /api/auth/me — returns current user info
+  static async getCurrentUser(req: any, res: Response) {
+    const userId = req.userId;
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      return res.status(200).json({
+        id: user.id,
+        email: user.email,
+        isVerified: user.isVerified,
+        isOnboarded: user.isOnboarded,
+        authProvider: user.authProvider,
+      });
+    } catch (error) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  // POST /api/auth/demo-login — logs in as first seed user (for testing)
+  static async demoLogin(req: Request, res: Response) {
+    try {
+      const mockUser = await prisma.user.findFirst({
+        where: { email: { endsWith: '@seed.heartsync.app' } },
+        include: { profile: { include: { photos: true } } },
+      });
+      if (!mockUser) return res.status(404).json({ error: 'No demo user found. Run seed script first.' });
+
+      const accessToken = jwt.sign({ userId: mockUser.id }, ACCESS_TOKEN_SECRET, { expiresIn: '7d' });
+      return res.status(200).json({
+        accessToken,
+        user: {
+          id: mockUser.id,
+          email: mockUser.email,
+          isVerified: true,
+          isOnboarded: true,
+          authProvider: 'demo',
+          profile: mockUser.profile,
+        },
+      });
+    } catch (error) {
       return res.status(500).json({ error: 'Internal server error' });
     }
   }

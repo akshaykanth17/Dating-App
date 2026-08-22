@@ -20,6 +20,7 @@ import swipeRoutes from './routes/swipeRoutes';
 import chatRoutes from './routes/chatRoutes';
 import safetyRoutes from './routes/safetyRoutes';
 import hangoutRoutes from './routes/hangoutRoutes';
+import onboardingRoutes from './routes/onboardingRoutes';
 
 // Import Services & Queue Workers
 import { getQueueService } from './services/queueService';
@@ -50,6 +51,7 @@ app.use('/api/swipes', swipeRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/safety', safetyRoutes);
 app.use('/api/hangouts', hangoutRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 // Socket.IO Server configuration
 const io = new Server(server, {

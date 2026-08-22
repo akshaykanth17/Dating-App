@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient();
+const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'heartsync_jwt_access_secret_change_me_in_production_12345';
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -9,19 +9,27 @@ export interface AuthenticatedRequest extends Request {
 
 export async function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
-    // Auth is bypassed: automatically act as the first seeded user
-    const mockUser = await prisma.user.findFirst({
-      where: { email: { endsWith: '@seed.heartsync.app' } },
-    });
-
-    if (!mockUser) {
-      return res.status(401).json({ error: 'No seed users found in DB. Run seed script first.' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized: No token provided' });
     }
 
-    req.userId = mockUser.id;
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid token format' });
+    }
+
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET) as { userId: string };
+    if (!decoded || !decoded.userId) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid token payload' });
+    }
+
+    req.userId = decoded.userId;
     next();
-  } catch (error) {
-    console.error('[authMiddleware] Error:', error);
-    res.status(500).json({ error: 'Internal server error during mock auth' });
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Unauthorized: Token expired' });
+    }
+    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
 }

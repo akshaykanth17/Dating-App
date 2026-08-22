@@ -6,6 +6,7 @@ import {
   Calendar, MapPin, Clock, Plus, Heart, X, User as UserIcon,
   RefreshCw, ChevronDown, Map,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Photo {
   id: string;
@@ -94,6 +95,9 @@ export default function HangoutsPage() {
   // Match celebration overlay
   const [matchResult, setMatchResult] = useState<{ hangoutTitle: string; creatorName: string; matchId: string } | null>(null);
 
+  // Concept Toaster
+  const [showConceptToaster, setShowConceptToaster] = useState(false);
+
   // Swipe drag state
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -119,7 +123,16 @@ export default function HangoutsPage() {
 
   useEffect(() => {
     fetchHangouts();
+    const hasSeenConcept = localStorage.getItem('heartsync_hangouts_concept');
+    if (!hasSeenConcept) {
+      setTimeout(() => setShowConceptToaster(true), 1000);
+    }
   }, []);
+
+  const dismissToaster = () => {
+    setShowConceptToaster(false);
+    localStorage.setItem('heartsync_hangouts_concept', 'true');
+  };
 
   const getPhotoUrl = (url: string) => {
     if (!url) return '';
@@ -648,6 +661,39 @@ export default function HangoutsPage() {
           </div>
         </div>
       )}
+
+      {/* Hangouts Concept Toaster */}
+      <AnimatePresence>
+        {showConceptToaster && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 left-4 right-4 md:left-auto md:right-8 md:w-96 z-50 glass bg-slate-900/95 border border-rose-500/50 rounded-2xl p-5 shadow-[0_10px_40px_rgba(244,63,94,0.25)]"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center">
+                  <Map className="w-5 h-5 text-rose-400" />
+                </div>
+                <h3 className="text-rose-400 font-bold text-lg">What are Hangouts?</h3>
+              </div>
+              <button onClick={dismissToaster} className="text-slate-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-slate-300 text-sm mt-3 leading-relaxed">
+              Hangouts are casual, real-world meetups. Post what you're doing—like grabbing coffee or seeing a movie—and swipe to join others! It's low-pressure and spontaneous.
+            </p>
+            <button
+              onClick={dismissToaster}
+              className="mt-5 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-colors shadow-inner border border-slate-700"
+            >
+              Got it, let's go!
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 }

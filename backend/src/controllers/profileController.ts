@@ -7,6 +7,35 @@ import { getStorageService } from '../services/storageService';
 const prisma = new PrismaClient();
 const storageService = getStorageService();
 
+const calculateProfileCompletion = (profile: any) => {
+  let score = 0;
+  let total = 0;
+
+  const checkField = (field: any) => {
+    total++;
+    if (field !== null && field !== undefined && field !== '' && (Array.isArray(field) ? field.length > 0 : true)) {
+      score++;
+    }
+  };
+
+  checkField(profile.name);
+  checkField(profile.bio);
+  checkField(profile.photos?.length > 0 ? profile.photos : null);
+  checkField(profile.interests?.length > 0 ? profile.interests : null);
+  checkField(profile.favoriteSpot);
+  checkField(profile.job);
+  checkField(profile.education);
+  checkField(profile.drinking);
+  checkField(profile.smoking);
+  checkField(profile.gym);
+  checkField(profile.height);
+  checkField(profile.weight);
+  checkField(profile.prompts?.length > 0 ? profile.prompts : null);
+
+  if (total === 0) return 0;
+  return Math.round((score / total) * 100);
+};
+
 export class ProfileController {
   static async getMyProfile(req: AuthenticatedRequest, res: Response) {
     const userId = req.userId!;
@@ -14,14 +43,16 @@ export class ProfileController {
     try {
       const profile = await prisma.profile.findUnique({
         where: { userId },
-        include: { photos: true },
+        include: { photos: true, prompts: true },
       });
 
       if (!profile) {
         return res.status(404).json({ error: 'Profile not found' });
       }
 
-      return res.status(200).json(profile);
+      const completionPercentage = calculateProfileCompletion(profile);
+
+      return res.status(200).json({ ...profile, completionPercentage });
     } catch (error) {
       console.error('[ProfileController.getMyProfile] Error:', error);
       return res.status(500).json({ error: 'Internal server error' });
@@ -30,7 +61,11 @@ export class ProfileController {
 
   static async updateProfile(req: AuthenticatedRequest, res: Response) {
     const userId = req.userId!;
-    const { name, bio, gender, birthdate, latitude, longitude, ageInterestedInMin, ageInterestedInMax, distanceInterestedIn, gendersInterestedIn } = req.body;
+    const { 
+      name, bio, gender, birthdate, latitude, longitude, 
+      ageInterestedInMin, ageInterestedInMax, distanceInterestedIn, gendersInterestedIn,
+      interests, favoriteSpot, job, education, drinking, smoking, gym, height, weight, prompts
+    } = req.body;
 
     try {
       const profile = await prisma.profile.findUnique({ where: { userId } });
@@ -49,6 +84,17 @@ export class ProfileController {
       if (ageInterestedInMax !== undefined) updateData.ageInterestedInMax = Number(ageInterestedInMax);
       if (distanceInterestedIn !== undefined) updateData.distanceInterestedIn = Number(distanceInterestedIn);
       if (gendersInterestedIn) updateData.gendersInterestedIn = gendersInterestedIn;
+      
+      // New fields
+      if (interests) updateData.interests = interests;
+      if (favoriteSpot !== undefined) updateData.favoriteSpot = favoriteSpot;
+      if (job !== undefined) updateData.job = job;
+      if (education !== undefined) updateData.education = education;
+      if (drinking !== undefined) updateData.drinking = drinking;
+      if (smoking !== undefined) updateData.smoking = smoking;
+      if (gym !== undefined) updateData.gym = gym;
+      if (height !== undefined) updateData.height = Number(height) || null;
+      if (weight !== undefined) updateData.weight = Number(weight) || null;
 
       if (birthdate) {
         const birthDateObj = new Date(birthdate);
@@ -68,13 +114,29 @@ export class ProfileController {
         updateData.birthdate = birthDateObj;
       }
 
+      // Handle prompts update
+      if (prompts && Array.isArray(prompts)) {
+        await prisma.prompt.deleteMany({ where: { profileId: profile.id } });
+        if (prompts.length > 0) {
+          await prisma.prompt.createMany({
+            data: prompts.map((p: any) => ({
+              profileId: profile.id,
+              question: p.question,
+              answer: p.answer,
+            })),
+          });
+        }
+      }
+
       const updatedProfile = await prisma.profile.update({
         where: { userId },
         data: updateData,
-        include: { photos: true },
+        include: { photos: true, prompts: true },
       });
 
-      return res.status(200).json(updatedProfile);
+      const completionPercentage = calculateProfileCompletion(updatedProfile);
+
+      return res.status(200).json({ ...updatedProfile, completionPercentage });
     } catch (error) {
       console.error('[ProfileController.updateProfile] Error:', error);
       return res.status(500).json({ error: 'Internal server error' });
@@ -218,6 +280,10 @@ export class ProfileController {
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (!user.passwordHash) {
+        return res.status(400).json({ error: 'Cannot change password for accounts signed up with Google' });
       }
 
       const passwordMatch = await bcrypt.compare(currentPassword, user.passwordHash);

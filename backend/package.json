@@ -4,7 +4,7 @@
   "private": true,
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "tsx --watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "postinstall": "prisma generate",
@@ -19,6 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "firebase-admin": "^14.3.0",
     "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
@@ -39,6 +40,7 @@
     "prisma": "^5.18.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.23.12",
     "typescript": "^5.5.4"
   }
 }

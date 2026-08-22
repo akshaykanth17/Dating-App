@@ -1,4 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const TOKEN_KEY = 'heartsync_token';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number>;
@@ -7,6 +8,12 @@ interface RequestOptions extends RequestInit {
 class ApiClient {
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const headers = new Headers(options.headers || {});
+
+    // Auto-inject JWT token from localStorage
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
 
     // Set JSON content type if sending body and not multipart-form
     if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
@@ -65,6 +72,11 @@ class ApiClient {
 
   delete<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+  }
+
+  // Multipart file upload
+  upload<T>(endpoint: string, formData: FormData): Promise<T> {
+    return this.request<T>(endpoint, { method: 'POST', body: formData });
   }
 }
 
