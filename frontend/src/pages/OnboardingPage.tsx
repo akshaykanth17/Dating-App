@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Camera, ChevronRight, ChevronLeft, MapPin, Heart, User, Calendar, Check, Loader2, AlertCircle, X } from 'lucide-react';
+import { reverseGeocode } from '../utils/location';
 
 const STEPS = ['About You', 'Location', 'Preferences', 'Details', 'Your Photo'];
 
@@ -120,16 +121,20 @@ export default function OnboardingPage() {
     setLocationLoading(true);
     setLocationStatus('Detecting your location...');
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         setLatitude(pos.coords.latitude);
         setLongitude(pos.coords.longitude);
-        setLocationStatus('📍 Location detected!');
+        const locName = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        setLocationStatus(`📍 ${locName}`);
         setLocationLoading(false);
       },
-      () => {
-        setLocationStatus('Could not detect location. Using default.');
-        setLatitude(28.6139); // Default: New Delhi
-        setLongitude(77.209);
+      async () => {
+        const defaultLat = 28.6139;
+        const defaultLon = 77.209;
+        setLatitude(defaultLat);
+        setLongitude(defaultLon);
+        const locName = await reverseGeocode(defaultLat, defaultLon);
+        setLocationStatus(`📍 ${locName} (Default)`);
         setLocationLoading(false);
       },
       { timeout: 10000 }
@@ -424,7 +429,6 @@ export default function OnboardingPage() {
                       <Check className="w-6 h-6 text-emerald-400" />
                     </div>
                     <p className="text-emerald-400 font-semibold text-sm">{locationStatus}</p>
-                    <p className="text-slate-500 text-xs">{latitude.toFixed(4)}°, {longitude?.toFixed(4)}°</p>
                   </div>
                 ) : (
                   <p className="text-slate-400 text-sm">{locationStatus}</p>

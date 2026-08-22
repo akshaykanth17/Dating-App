@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
-import { CircleUser, Trash2, Upload, RefreshCw, X } from 'lucide-react';
+import { CircleUser, Trash2, Upload, RefreshCw, X, MapPin } from 'lucide-react';
+import { reverseGeocode } from '../utils/location';
 
 const INTEREST_OPTIONS = [
   'Movies', 'Coffee', 'Hiking', 'Photography', 'Foodie', 'Travel', 
@@ -69,8 +70,15 @@ export default function ProfilePage() {
   const [profileError, setProfileError] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [locationName, setLocationName] = useState<string>('');
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+  useEffect(() => {
+    if (user?.profile?.latitude && user?.profile?.longitude) {
+      reverseGeocode(user.profile.latitude, user.profile.longitude).then(setLocationName);
+    }
+  }, [user]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -553,8 +561,9 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="pt-4 flex items-center justify-between border-t border-slate-800/50 mt-6">
-                  <span className="text-xs text-slate-500">
-                    Location GPS: {user?.profile?.latitude?.toFixed(4)}, {user?.profile?.longitude?.toFixed(4)}
+                  <span className="text-xs text-slate-500 flex items-center">
+                    <MapPin className="w-3 h-3 mr-1" />
+                    {locationName || `GPS: ${user?.profile?.latitude?.toFixed(4)}, ${user?.profile?.longitude?.toFixed(4)}`}
                   </span>
                   <button
                     type="submit"
