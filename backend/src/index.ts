@@ -21,6 +21,7 @@ import chatRoutes from './routes/chatRoutes';
 import safetyRoutes from './routes/safetyRoutes';
 import hangoutRoutes from './routes/hangoutRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
+import seedRoutes from './routes/seedRoutes';
 
 // Import Services & Queue Workers
 import { getQueueService } from './services/queueService';
@@ -52,6 +53,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/safety', safetyRoutes);
 app.use('/api/hangouts', hangoutRoutes);
 app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/seed', seedRoutes);
 
 // Socket.IO Server configuration
 const io = new Server(server, {
