@@ -1,17 +1,10 @@
 export async function reverseGeocode(lat: number, lon: number): Promise<string> {
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+    const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
     const data = await res.json();
     
-    // Fallbacks for different address formats returned by Nominatim
-    const city = data.address?.city || 
-                 data.address?.town || 
-                 data.address?.village || 
-                 data.address?.county || 
-                 data.address?.state_district || 
-                 'Unknown Location';
-                 
-    const country = data.address?.country || '';
+    const city = data.city || data.locality || data.principalSubdivision || 'Unknown Location';
+    const country = data.countryName || '';
     
     const locationName = `${city}, ${country}`.replace(/,\s*$/, ''); // Remove trailing comma if country is missing
     return locationName || `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
