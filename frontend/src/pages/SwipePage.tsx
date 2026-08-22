@@ -199,12 +199,170 @@ export default function SwipePage() {
     }
   };
 
-  const currentCandidate = candidates[currentIndex];
-  
-  // Prepare photos for scrollable view
-  const primaryPhoto = currentCandidate?.photos?.find(p => p.isPrimary) || currentCandidate?.photos?.[0];
-  const otherPhotos = currentCandidate?.photos?.filter(p => p.id !== primaryPhoto?.id) || [];
+  const renderCardContent = (candidate: Candidate, isTop: boolean) => {
+    const primaryPhoto = candidate?.photos?.find((p) => p.isPrimary) || candidate?.photos?.[0];
+    const otherPhotos = candidate?.photos?.filter((p) => p.id !== primaryPhoto?.id) || [];
 
+    return (
+      <>
+        {/* LIKE / PASS Stamps (Only on top card) */}
+        {isTop && (
+          <>
+            <motion.div
+              className="absolute top-10 left-6 z-40 px-6 py-2 rounded-xl border-4 border-emerald-500 text-emerald-400 font-black text-3xl tracking-widest rotate-[-12deg] pointer-events-none"
+              style={{ opacity: likeOpacity }}
+            >
+              LIKE
+            </motion.div>
+            <motion.div
+              className="absolute top-10 right-6 z-40 px-6 py-2 rounded-xl border-4 border-rose-500 text-rose-400 font-black text-3xl tracking-widest rotate-[12deg] pointer-events-none"
+              style={{ opacity: passOpacity }}
+            >
+              DISLIKE
+            </motion.div>
+          </>
+        )}
+
+        {/* Primary Image Section */}
+        <div className="relative w-full aspect-[3/4] md:aspect-[3.2/4]">
+          {primaryPhoto ? (
+            <img
+              src={
+                primaryPhoto.url.startsWith('/uploads')
+                  ? `${API_URL.replace('/api', '')}${primaryPhoto.url}`
+                  : primaryPhoto.url
+              }
+              alt={candidate.name}
+              className="w-full h-full object-cover select-none pointer-events-none"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-slate-900">
+              <UserIcon className="w-20 h-20" />
+              <span className="text-xs mt-2">No photo uploaded</span>
+            </div>
+          )}
+          {/* Visual Vignette overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+
+          {/* Profile Basic Info Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col">
+            <div className="flex items-baseline space-x-2">
+              <h3 className="text-3xl font-black text-slate-100 drop-shadow-md">{candidate.name}</h3>
+              <span className="text-2xl font-bold text-slate-300 drop-shadow-md">{getAge(candidate.birthdate)}</span>
+            </div>
+            <div className="flex items-center space-x-2 mt-2">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 backdrop-blur-sm">
+                {candidate.gender}
+              </span>
+              <span className="text-xs text-slate-300 font-medium drop-shadow-sm">
+                {candidate.distance.toFixed(1)} km away
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bio Section */}
+        {candidate.bio && (
+          <div className="p-6">
+            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">About Me</h4>
+            <p className="text-base text-slate-200 leading-relaxed">{candidate.bio}</p>
+          </div>
+        )}
+
+        {/* Interests & Details */}
+        <div className="px-6 pb-6 space-y-4">
+          {candidate.interests && candidate.interests.length > 0 && (
+            <div>
+              <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Interests</h4>
+              <div className="flex flex-wrap gap-2">
+                {candidate.interests.map((interest, idx) => (
+                  <span key={idx} className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold">
+                    {interest}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Info Pills */}
+          <div className="flex flex-wrap gap-2">
+            {candidate.job && (
+              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
+                💼 <span>{candidate.job}</span>
+              </span>
+            )}
+            {candidate.education && (
+              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
+                🎓 <span>{candidate.education}</span>
+              </span>
+            )}
+            {candidate.height && (
+              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
+                📏 <span>{candidate.height} cm</span>
+              </span>
+            )}
+            {candidate.weight && (
+              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
+                ⚖️ <span>{candidate.weight} kg</span>
+              </span>
+            )}
+            {candidate.gym && (
+              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
+                💪 <span>Gym: {candidate.gym}</span>
+              </span>
+            )}
+            {candidate.drinking && (
+              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
+                🍷 <span>Drinks: {candidate.drinking}</span>
+              </span>
+            )}
+            {candidate.smoking && (
+              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
+                🚬 <span>Smokes: {candidate.smoking}</span>
+              </span>
+            )}
+            {candidate.favoriteSpot && (
+              <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
+                📍 <span>Fav spot: {candidate.favoriteSpot}</span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Interleaved Prompts and Other Photos */}
+        <div className="flex flex-col space-y-4 px-4 pb-6 mt-4">
+          {Array.from({ length: Math.max(otherPhotos.length, candidate.prompts?.length || 0) }).map((_, i) => (
+            <React.Fragment key={i}>
+              {candidate.prompts?.[i] && candidate.prompts[i].question && candidate.prompts[i].answer && (
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50">
+                  <p className="text-xs text-rose-400 font-bold mb-2 uppercase tracking-wider">
+                    {candidate.prompts[i].question}
+                  </p>
+                  <p className="text-lg text-slate-200 font-serif italic">"{candidate.prompts[i].answer}"</p>
+                </div>
+              )}
+              {otherPhotos[i] && (
+                <div className="w-full rounded-2xl overflow-hidden shadow-lg aspect-[3/4]">
+                  <img
+                    src={
+                      otherPhotos[i].url.startsWith('/uploads')
+                        ? `${API_URL.replace('/api', '')}${otherPhotos[i].url}`
+                        : otherPhotos[i].url
+                    }
+                    alt={`${candidate.name} detail`}
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                  />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </>
+    );
+  };
+
+  const currentCandidate = candidates[currentIndex];
+  const nextCandidate = currentIndex + 1 < candidates.length ? candidates[currentIndex + 1] : null;
 
   return (
     <Layout>
@@ -242,12 +400,22 @@ export default function SwipePage() {
               </button>
             </div>
           ) : (
-            /* Scrollable Profile Card */
-            <div className="relative w-full max-w-sm h-[75vh] md:h-[80vh] rounded-3xl overflow-hidden shadow-2xl glass border border-slate-800/80 flex flex-col bg-slate-950">
+            /* Scrollable Profile Card Stack */
+            <div className="relative w-full max-w-sm h-[75vh] md:h-[80vh] rounded-3xl overflow-hidden shadow-2xl glass border border-slate-800/80 bg-slate-950">
               
-              {/* Scrollable Content */}
+              {/* Background Card (Next Candidate) */}
+              {nextCandidate && (
+                <div 
+                  className="absolute inset-0 overflow-y-auto scrollbar-hide pb-28 z-10 bg-slate-950 scale-95 opacity-60 pointer-events-none transform origin-bottom transition-all duration-300"
+                  key={nextCandidate.id}
+                >
+                  {renderCardContent(nextCandidate, false)}
+                </div>
+              )}
+
+              {/* Foreground Card (Current Candidate) */}
               <motion.div 
-                className="flex-1 overflow-y-auto scrollbar-hide pb-28 cursor-grab active:cursor-grabbing"
+                className="absolute inset-0 overflow-y-auto scrollbar-hide pb-28 cursor-grab active:cursor-grabbing z-20 bg-slate-950 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
                 key={currentCandidate.id}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
@@ -255,130 +423,15 @@ export default function SwipePage() {
                 style={{ x, rotate: rotation }}
                 animate={controls}
               >
-
-                
-                {/* LIKE / PASS Stamps */}
-                <motion.div
-                  className="absolute top-10 left-6 z-40 px-6 py-2 rounded-xl border-4 border-emerald-500 text-emerald-400 font-black text-3xl tracking-widest rotate-[-12deg] pointer-events-none"
-                  style={{ opacity: likeOpacity }}
-                >
-                  LIKE
-                </motion.div>
-                <motion.div
-                  className="absolute top-10 right-6 z-40 px-6 py-2 rounded-xl border-4 border-rose-500 text-rose-400 font-black text-3xl tracking-widest rotate-[12deg] pointer-events-none"
-                  style={{ opacity: passOpacity }}
-                >
-                  DISLIKE
-                </motion.div>
-
-                {/* Primary Image Section */}
-                <div className="relative w-full aspect-[3/4] md:aspect-[3.2/4]">
-                  {primaryPhoto ? (
-                    <img
-                      src={primaryPhoto.url.startsWith('/uploads')
-                        ? `${API_URL.replace('/api', '')}${primaryPhoto.url}`
-                        : primaryPhoto.url
-                      }
-                      alt={currentCandidate.name}
-                      className="w-full h-full object-cover select-none pointer-events-none"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-slate-900">
-                      <UserIcon className="w-20 h-20" />
-                      <span className="text-xs mt-2">No photo uploaded</span>
-                    </div>
-                  )}
-                  {/* Visual Vignette overlay for text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
-                  
-                  {/* Profile Basic Info Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col">
-                    <div className="flex items-baseline space-x-2">
-                      <h3 className="text-3xl font-black text-slate-100 drop-shadow-md">{currentCandidate.name}</h3>
-                      <span className="text-2xl font-bold text-slate-300 drop-shadow-md">{getAge(currentCandidate.birthdate)}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 backdrop-blur-sm">
-                        {currentCandidate.gender}
-                      </span>
-                      <span className="text-xs text-slate-300 font-medium drop-shadow-sm">
-                        {currentCandidate.distance.toFixed(1)} km away
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bio Section */}
-                {currentCandidate.bio && (
-                  <div className="p-6">
-                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">About Me</h4>
-                    <p className="text-base text-slate-200 leading-relaxed">
-                      {currentCandidate.bio}
-                    </p>
-                  </div>
-                )}
-
-                {/* Interests & Details */}
-                <div className="px-6 pb-6 space-y-4">
-                  {currentCandidate.interests && currentCandidate.interests.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Interests</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {currentCandidate.interests.map((interest, idx) => (
-                          <span key={idx} className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold">
-                            {interest}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Info Pills */}
-                  <div className="flex flex-wrap gap-2">
-                    {currentCandidate.job && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">💼 <span>{currentCandidate.job}</span></span>}
-                    {currentCandidate.education && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🎓 <span>{currentCandidate.education}</span></span>}
-                    {currentCandidate.height && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">📏 <span>{currentCandidate.height} cm</span></span>}
-                    {currentCandidate.weight && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">⚖️ <span>{currentCandidate.weight} kg</span></span>}
-                    {currentCandidate.gym && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">💪 <span>Gym: {currentCandidate.gym}</span></span>}
-                    {currentCandidate.drinking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🍷 <span>Drinks: {currentCandidate.drinking}</span></span>}
-                    {currentCandidate.smoking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🚬 <span>Smokes: {currentCandidate.smoking}</span></span>}
-                    {currentCandidate.favoriteSpot && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">📍 <span>Fav spot: {currentCandidate.favoriteSpot}</span></span>}
-                  </div>
-                </div>
-
-                {/* Interleaved Prompts and Other Photos */}
-                <div className="flex flex-col space-y-4 px-4 pb-6 mt-4">
-                  {Array.from({ length: Math.max(otherPhotos.length, currentCandidate.prompts?.length || 0) }).map((_, i) => (
-                    <React.Fragment key={i}>
-                      {currentCandidate.prompts?.[i] && currentCandidate.prompts[i].question && currentCandidate.prompts[i].answer && (
-                        <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50">
-                          <p className="text-xs text-rose-400 font-bold mb-2 uppercase tracking-wider">{currentCandidate.prompts[i].question}</p>
-                          <p className="text-lg text-slate-200 font-serif italic">"{currentCandidate.prompts[i].answer}"</p>
-                        </div>
-                      )}
-                      {otherPhotos[i] && (
-                        <div className="w-full rounded-2xl overflow-hidden shadow-lg aspect-[3/4]">
-                          <img
-                            src={otherPhotos[i].url.startsWith('/uploads')
-                              ? `${API_URL.replace('/api', '')}${otherPhotos[i].url}`
-                              : otherPhotos[i].url
-                            }
-                            alt={`${currentCandidate.name} detail`}
-                            className="w-full h-full object-cover select-none pointer-events-none"
-                          />
-                        </div>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
+                {renderCardContent(currentCandidate, true)}
               </motion.div>
 
               {/* Sticky Action Buttons */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent z-30 flex items-center justify-center space-x-6">
+              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent z-30 flex items-center justify-center space-x-6 pointer-events-none">
                 {/* PASS button */}
                 <button
                   onClick={() => handleSwipeClick('PASS')}
-                  className="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-500/50 hover:shadow-[0_0_20px_rgba(244,63,94,0.2)] transition-all duration-300 transform hover:scale-105"
+                  className="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-500/50 hover:shadow-[0_0_20px_rgba(244,63,94,0.2)] transition-all duration-300 transform hover:scale-105 pointer-events-auto"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -389,7 +442,7 @@ export default function SwipePage() {
                     setSafetyActionType('block');
                     setShowSafetyModal(true);
                   }}
-                  className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 hover:text-amber-500 hover:border-amber-500/50 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all duration-300 transform hover:scale-105"
+                  className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 hover:text-amber-500 hover:border-amber-500/50 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all duration-300 transform hover:scale-105 pointer-events-auto"
                 >
                   <ShieldAlert className="w-5 h-5" />
                 </button>
@@ -397,7 +450,7 @@ export default function SwipePage() {
                 {/* LIKE button */}
                 <button
                   onClick={() => handleSwipeClick('LIKE')}
-                  className="w-14 h-14 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-[0_4px_15px_rgba(244,63,94,0.4)] hover:bg-rose-500 hover:shadow-[0_0_25px_rgba(244,63,94,0.6)] transition-all duration-300 transform hover:scale-105"
+                  className="w-14 h-14 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-[0_4px_15px_rgba(244,63,94,0.4)] hover:bg-rose-500 hover:shadow-[0_0_25px_rgba(244,63,94,0.6)] transition-all duration-300 transform hover:scale-105 pointer-events-auto"
                 >
                   <Heart className="w-6 h-6 fill-white" />
                 </button>
