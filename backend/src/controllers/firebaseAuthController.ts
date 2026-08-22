@@ -17,7 +17,7 @@ if (getApps().length === 0) {
   if (serviceAccount) {
     adminApp = initializeApp({ credential: cert(serviceAccount) });
   } else {
-    adminApp = initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID || 'heartsync-placeholder' });
+    adminApp = initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID || 'heartsync-6cf36' });
   }
 } else {
   adminApp = getApps()[0];
