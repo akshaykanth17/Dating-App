@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: userData.id || profile?.userId,
           email: userData.email || '',
           isVerified: userData.isVerified ?? true,
-          isOnboarded: userData.isOnboarded ?? !!profile,
+          isOnboarded: Boolean(userData.isOnboarded && profile),
           authProvider: userData.authProvider || 'email',
           profile,
         });

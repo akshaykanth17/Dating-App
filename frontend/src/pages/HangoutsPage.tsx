@@ -263,7 +263,7 @@ export default function HangoutsPage() {
           </button>
         </div>
 
-        {error && (
+        {error && error !== 'Profile not found' && (
           <p className="text-rose-400 text-sm mb-4 bg-rose-950/20 p-3 rounded-lg border border-rose-900/50 w-full">{error}</p>
         )}
 
@@ -272,6 +272,20 @@ export default function HangoutsPage() {
           <div className="flex flex-col items-center justify-center py-32 space-y-4">
             <RefreshCw className="w-10 h-10 text-rose-500 animate-spin" />
             <p className="text-slate-400 text-sm">Loading hangouts...</p>
+          </div>
+        ) : error === 'Profile not found' ? (
+          <div className="text-center py-16 glass rounded-3xl border border-slate-800 w-full px-6">
+            <UserIcon className="w-16 h-16 text-rose-500/80 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-slate-200">Profile Required</h3>
+            <p className="text-slate-400 mt-2 text-sm max-w-xs mx-auto">
+              Please complete your dating profile first so we can match you with relevant hangouts and people nearby.
+            </p>
+            <button
+              onClick={() => navigate('/onboarding')}
+              className="mt-6 px-6 py-2.5 rounded-full bg-gradient text-white text-sm font-bold shadow-lg shadow-rose-500/30 hover:opacity-95 transition-all"
+            >
+              Complete Profile
+            </button>
           </div>
         ) : isDone ? (
           <div className="text-center py-20 glass rounded-3xl border border-slate-800 w-full px-6">
