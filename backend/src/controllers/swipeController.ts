@@ -98,15 +98,6 @@ export class SwipeController {
 
         if (mutualSwipe && (mutualSwipe.type === 'LIKE' || mutualSwipe.type === 'SUPER_LIKE')) {
           isMatch = true;
-        } else {
-          // Check if target user is a dummy profile for testing purposes
-          const targetUser = await prisma.user.findUnique({
-            where: { id: swipedId },
-            select: { email: true }
-          });
-          if (targetUser && targetUser.email.includes('dummy')) {
-            isMatch = true;
-          }
         }
 
         if (isMatch) {
