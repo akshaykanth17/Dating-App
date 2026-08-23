@@ -16,5 +16,7 @@ router.post('/reset', SwipeController.resetSwipes);
 router.post('/undo', SwipeController.undoSwipe);
 router.post('/', swipeLimiter, SwipeController.swipe);
 router.get('/matches', SwipeController.getMatches);
+router.post('/matches/:id/continue', SwipeController.continueMatch);
+router.delete('/matches/:id', SwipeController.unmatch);
 
 export default router;

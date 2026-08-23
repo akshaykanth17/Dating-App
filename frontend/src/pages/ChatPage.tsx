@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -20,6 +21,10 @@ interface Match {
     content: string;
     createdAt: string;
   } | null;
+  matchType: string;
+  user1Continue: boolean;
+  user2Continue: boolean;
+  hangoutEventDate: string | null;
   createdAt: string;
 }
 
@@ -43,6 +48,11 @@ export default function ChatPage() {
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [isLoadingMatches, setIsLoadingMatches] = useState(true);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
+  
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<'DATING' | 'HANGOUT'>(
+    location.state?.tab === 'HANGOUT' ? 'HANGOUT' : 'DATING'
+  );
 
   // Safety options dropdown in chat header
   const [showOptions, setShowOptions] = useState(false);
@@ -242,30 +252,100 @@ export default function ChatPage() {
     return onlineUsers[userId] === 'online';
   };
 
+  const handleContinueMatch = async () => {
+    if (!selectedMatch) return;
+    try {
+      await api.post(`/swipes/matches/${selectedMatch.id}/continue`, {});
+      // Refresh matches list to get updated continue status or move to Dating tab
+      await fetchMatches();
+      
+      // Update selected match local state if it didn't move tabs (meaning the other hasn't accepted yet)
+      const isUser1 = selectedMatch.otherProfile.userId !== selectedMatch.user1Id; // Wait, user1Id might not be returned in MatchDTO, let's just refresh and see if it's still in the list
+      setSelectedMatch(prev => prev ? { ...prev, user1Continue: true, user2Continue: true } : null);
+      
+    } catch (err: any) {
+      alert(err.message || 'Failed to continue chat');
+    }
+  };
+
+  const handleRemoveMatch = async () => {
+    if (!selectedMatch) return;
+    try {
+      await api.delete(`/swipes/matches/${selectedMatch.id}`);
+      setMatches(prev => prev.filter(m => m.id !== selectedMatch.id));
+      setSelectedMatch(null);
+    } catch (err: any) {
+      alert(err.message || 'Failed to remove chat');
+    }
+  };
+
+  // Determine if current chat is a Hangout chat that has passed its event time
+  const isHangoutExpired = selectedMatch && selectedMatch.matchType === 'HANGOUT' && selectedMatch.hangoutEventDate
+    ? new Date() > new Date(selectedMatch.hangoutEventDate)
+    : false;
+    
+  // Check if current user has already opted to continue
+  // Since we don't strictly know if current user is user1 or user2 from frontend easily without checking user.id
+  const currentUserHasContinued = selectedMatch && user
+    ? (selectedMatch as any).user1Id === user.id ? selectedMatch.user1Continue : selectedMatch.user2Continue
+    : false;
+
   return (
     <Layout>
       <div className="flex flex-1 h-[calc(100vh-10rem)] border border-slate-800 rounded-3xl overflow-hidden glass">
         
         {/* Left Column: Matches list */}
-        <aside className="w-full md:w-80 border-r border-slate-800 flex flex-col bg-slate-950/40">
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-            <h2 className="text-lg font-bold tracking-tight">Active Matches</h2>
-            <button onClick={fetchMatches} className="p-1 text-slate-400 hover:text-slate-200">
-              <RefreshCw className="w-4 h-4" />
-            </button>
+        <aside className={`w-full md:w-80 border-r border-slate-800 flex flex-col bg-slate-950/40 ${selectedMatch ? 'hidden md:flex' : 'flex'}`}>
+          <div className="p-4 border-b border-slate-800 flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold tracking-tight">Active Matches</h2>
+              <button onClick={fetchMatches} className="p-1 text-slate-400 hover:text-slate-200">
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Tabs for Dating vs Hangouts */}
+            <div className="flex bg-slate-900 p-1 rounded-lg">
+              <button
+                onClick={() => { setActiveTab('DATING'); setSelectedMatch(null); }}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                  activeTab === 'DATING' ? 'bg-rose-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-300'
+                }`}
+              >
+                Matches
+              </button>
+              <button
+                onClick={() => { setActiveTab('HANGOUT'); setSelectedMatch(null); }}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                  activeTab === 'HANGOUT' ? 'bg-rose-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-300'
+                }`}
+              >
+                Hangouts
+              </button>
+            </div>
           </div>
           
           <div className="flex-1 overflow-y-auto">
             {isLoadingMatches ? (
               <div className="p-8 text-center text-slate-400"><RefreshCw className="w-6 h-6 animate-spin mx-auto" /></div>
-            ) : matches.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 flex flex-col items-center">
-                <MessageCircle className="w-12 h-12 text-slate-700 mb-2" />
-                <p className="text-sm font-semibold">No matches yet</p>
-                <p className="text-xs text-slate-600 mt-1">Go to Discover and swipe to find potential matches!</p>
-              </div>
-            ) : (
-              matches.map((m) => {
+            ) : (() => {
+              const displayedMatches = matches.filter(m => m.matchType === activeTab || (!m.matchType && activeTab === 'DATING'));
+              
+              if (displayedMatches.length === 0) {
+                return (
+                  <div className="p-8 text-center text-slate-500 flex flex-col items-center">
+                    <MessageCircle className="w-12 h-12 text-slate-700 mb-2" />
+                    <p className="text-sm font-semibold">No matches yet</p>
+                    <p className="text-xs text-slate-600 mt-1">
+                      {activeTab === 'DATING' 
+                        ? 'Go to Discover and swipe to find potential matches!'
+                        : 'Post a Hangout or join one to start connecting!'}
+                    </p>
+                  </div>
+                );
+              }
+
+              return displayedMatches.map((m) => {
                 const photo = getOtherUserPhoto(m);
                 const isOnline = isUserOnline(m.otherProfile.userId);
                 const isSelected = selectedMatch?.id === m.id;
@@ -305,8 +385,8 @@ export default function ChatPage() {
                     </div>
                   </button>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         </aside>
 
@@ -417,24 +497,54 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Chat Input form */}
-              <form onSubmit={handleSend} className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center space-x-3">
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  value={inputText}
-                  onChange={handleInputChange}
-                  disabled={isLoadingChat}
-                  className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-rose-500 disabled:opacity-50"
-                />
-                <button
-                  type="submit"
-                  disabled={!inputText.trim()}
-                  className="p-3 bg-rose-600 rounded-xl text-white hover:bg-rose-500 shadow-md transition-colors disabled:opacity-50 disabled:hover:bg-rose-600"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </form>
+              {/* Chat Input form or Event Expired CTA */}
+              {isHangoutExpired ? (
+                <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex flex-col items-center justify-center space-y-3">
+                  {currentUserHasContinued ? (
+                    <div className="text-center text-slate-400 text-sm p-4 bg-slate-900 rounded-xl border border-slate-800 w-full">
+                      Waiting for <strong>{selectedMatch.otherProfile.name}</strong> to respond...
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-slate-300 text-center font-medium">
+                        The event time has passed! Do you want to continue chatting or remove this connection?
+                      </p>
+                      <div className="flex items-center space-x-3 w-full max-w-sm">
+                        <button
+                          onClick={handleRemoveMatch}
+                          className="flex-1 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white text-sm font-bold transition-colors"
+                        >
+                          Remove chat
+                        </button>
+                        <button
+                          onClick={handleContinueMatch}
+                          className="flex-1 py-2.5 rounded-xl bg-rose-600 text-white shadow-lg hover:bg-rose-500 text-sm font-bold transition-colors"
+                        >
+                          Continue chat
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <form onSubmit={handleSend} className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center space-x-3">
+                  <input
+                    type="text"
+                    placeholder="Type a message..."
+                    value={inputText}
+                    onChange={handleInputChange}
+                    disabled={isLoadingChat}
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-rose-500 disabled:opacity-50"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!inputText.trim()}
+                    className="p-3 bg-rose-600 rounded-xl text-white hover:bg-rose-500 shadow-md transition-colors disabled:opacity-50 disabled:hover:bg-rose-600"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+              )}
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">

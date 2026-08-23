@@ -64,13 +64,13 @@ const io = new Server(server, {
 // Expose io instance to express controllers
 app.set('io', io);
 
-const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'heartsync_jwt_access_secret_change_me_in_production_12345';
+const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'tapin_jwt_access_secret_change_me_in_production_12345';
 
 // Socket.IO Authentication Middleware (Bypassed for demo)
 io.use(async (socket, next) => {
   try {
     const mockUser = await prisma.user.findFirst({
-      where: { email: { endsWith: '@seed.heartsync.app' } },
+      where: { email: { endsWith: '@seed.tapin.app' } },
     });
     
     if (mockUser) {
@@ -248,6 +248,6 @@ queueService.registerWorker('email', async (jobData) => {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, async () => {
-  console.log(`[Server] HeartSync API listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);
+  console.log(`[Server] TapIn API listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);
   await cleanAllDummyData(prisma);
 });

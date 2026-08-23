@@ -9,15 +9,15 @@ export class EmailService implements IEmailService {
 
   constructor() {
     this.resendApiKey = process.env.RESEND_API_KEY;
-    this.fromEmail = process.env.EMAIL_FROM || 'noreply@heartsync.app';
+    this.fromEmail = process.env.EMAIL_FROM || 'noreply@tapin.app';
   }
 
   async sendVerificationEmail(email: string, token: string): Promise<void> {
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
-    const subject = 'Verify your HeartSync account';
+    const subject = 'Verify your TapIn account';
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-        <h2 style="color: #e11d48; text-align: center;">Welcome to HeartSync!</h2>
+        <h2 style="color: #e11d48; text-align: center;">Welcome to TapIn!</h2>
         <p>Hi there,</p>
         <p>Thank you for signing up. Please click the button below to verify your email address and activate your account:</p>
         <div style="text-align: center; margin: 30px 0;">
@@ -26,7 +26,7 @@ export class EmailService implements IEmailService {
         <p>Or copy and paste this link in your browser:</p>
         <p style="color: #666; font-size: 14px; word-break: break-all;">${verificationUrl}</p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #999; text-align: center;">Must be 18+ to use HeartSync. If you did not register for this account, please ignore this email.</p>
+        <p style="font-size: 12px; color: #999; text-align: center;">Must be 18+ to use TapIn. If you did not register for this account, please ignore this email.</p>
       </div>
     `;
 
@@ -35,18 +35,18 @@ export class EmailService implements IEmailService {
 
   async sendPasswordResetEmail(email: string, token: string): Promise<void> {
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
-    const subject = 'Reset your HeartSync Password';
+    const subject = 'Reset your TapIn Password';
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
         <h2 style="color: #e11d48; text-align: center;">Password Reset Request</h2>
         <p>Hi there,</p>
-        <p>We received a request to reset your password for your HeartSync account. Click the button below to set a new password:</p>
+        <p>We received a request to reset your password for your TapIn account. Click the button below to set a new password:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${resetUrl}" style="background: linear-gradient(135deg, #e11d48, #be123c); color: white; padding: 12px 24px; text-decoration: none; border-radius: 9999px; font-weight: bold; display: inline-block;">Reset Password</a>
         </div>
         <p>This password reset link will expire in 1 hour. If you did not make this request, you can safely ignore this email.</p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #999; text-align: center;">HeartSync Dating App Support</p>
+        <p style="font-size: 12px; color: #999; text-align: center;">TapIn Dating App Support</p>
       </div>
     `;
 

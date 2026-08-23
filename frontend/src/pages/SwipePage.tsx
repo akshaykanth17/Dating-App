@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import Layout from '../components/Layout';
 import ProfileCardContent from '../components/ProfileCardContent';
-import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, Sparkles, Flame, User as UserIcon, SlidersHorizontal } from 'lucide-react';
+import Confetti from 'react-confetti';
+import FilterModal, { type FilterState } from '../components/FilterModal';
+import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, Sparkles, Flame, User as UserIcon, SlidersHorizontal, Settings2 } from 'lucide-react';
 import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from 'framer-motion';
 import { getPhotoUrl, handleImageError } from '../utils/photoUrl';
 
@@ -42,12 +45,39 @@ export default function SwipePage() {
   const [swipeResult, setSwipeResult] = useState<any>(null); // controls Mutual Match modal
   const [superLikesRemaining, setSuperLikesRemaining] = useState<number>(1);
   const [showSuperLikeEmptyModal, setShowSuperLikeEmptyModal] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterState>({
+    genders: [],
+    ageMin: 18,
+    ageMax: 50,
+    distance: 50,
+  });
+
+  // Sync initial state from user profile
+  useEffect(() => {
+    if (user?.profile) {
+      const p = user.profile as any;
+      setActiveFilters({
+        genders: p.gendersInterestedIn || [],
+        ageMin: p.ageInterestedInMin || 18,
+        ageMax: p.ageInterestedInMax || 50,
+        distance: p.distanceInterestedIn || 50,
+      });
+    }
+  }, [user]);
 
   // Safety block/report modal states
   const [showSafetyModal, setShowSafetyModal] = useState(false);
   const [reportReason, setReportReason] = useState('inappropriate_bio');
   const [reportNote, setReportNote] = useState('');
   const [safetyActionType, setSafetyActionType] = useState<'block' | 'report'>('block');
+
+  // Node for portal
+  const [headerNode, setHeaderNode] = useState<Element | null>(null);
+
+  useEffect(() => {
+    setHeaderNode(document.getElementById('header-actions'));
+  }, []);
 
   const x = useMotionValue(0);
   const controls = useAnimation();
@@ -63,7 +93,13 @@ export default function SwipePage() {
   const fetchCandidates = async () => {
     setIsLoading(true);
     try {
-      const data = await api.get<Candidate[]>('/swipes/discovery');
+      const params = new URLSearchParams();
+      if (activeFilters.genders.length) params.append('gender', activeFilters.genders.join(','));
+      params.append('ageMin', activeFilters.ageMin.toString());
+      params.append('ageMax', activeFilters.ageMax.toString());
+      params.append('distance', activeFilters.distance.toString());
+      
+      const data = await api.get<Candidate[]>(`/swipes/discovery?${params.toString()}`);
       setCandidates(data || []);
       setCurrentIndex(0);
     } catch (error) {
@@ -85,8 +121,8 @@ export default function SwipePage() {
   useEffect(() => {
     // Check if tutorial should be shown for newly onboarded or first-time user
     if (user && user.isOnboarded) {
-      const userTutorialKey = user.id ? `heartsync_tutorial_completed_${user.id}` : 'heartsync_tutorial_completed';
-      const isCompleted = localStorage.getItem(userTutorialKey) || localStorage.getItem('heartsync_tutorial_completed');
+      const userTutorialKey = user.id ? `tapin_tutorial_completed_${user.id}` : 'tapin_tutorial_completed';
+      const isCompleted = localStorage.getItem(userTutorialKey) || localStorage.getItem('tapin_tutorial_completed');
 
       if (!isCompleted) {
         navigate('/tutorial');
@@ -100,7 +136,7 @@ export default function SwipePage() {
     } else {
       setIsLoading(false);
     }
-  }, [user, navigate]);
+  }, [user, navigate, activeFilters]);
 
 
   const handleSwipe = async (type: 'LIKE' | 'PASS' | 'SUPER_LIKE') => {
@@ -121,6 +157,7 @@ export default function SwipePage() {
         setSwipeResult({
           matchId: res.matchId,
           otherProfile: res.otherProfile,
+          isMatch: true,
         });
       }
     } catch (error) {
@@ -213,8 +250,27 @@ export default function SwipePage() {
         </div>
       )}
 
+      {/* Filter Button Portaled into Header */}
+      {headerNode && user?.isVerified && createPortal(
+        <button
+          onClick={() => setIsFilterOpen(true)}
+          className="p-2 rounded-full hover:bg-slate-800 transition-colors text-slate-400 hover:text-rose-500 flex items-center justify-center cursor-pointer"
+          title="Filters"
+        >
+          <Settings2 className="w-5 h-5" />
+        </button>,
+        headerNode
+      )}
+
       {user?.isVerified && (
-        <div className="flex flex-col items-center justify-center flex-1 py-4">
+        <div className="flex flex-col items-center justify-center flex-1 py-2 w-full">
+          <FilterModal
+            isOpen={isFilterOpen}
+            onClose={() => setIsFilterOpen(false)}
+            initialFilters={activeFilters}
+            onSave={(filters) => setActiveFilters(filters)}
+          />
+
           {isLoading ? (
             <div className="flex flex-col items-center justify-center space-y-4">
               <RefreshCw className="w-10 h-10 text-rose-500 animate-spin" />
@@ -433,8 +489,9 @@ export default function SwipePage() {
       )}
 
       {/* Mutual Match Modal Overlay */}
-      {swipeResult && (
+      {swipeResult && swipeResult.isMatch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
+          <Confetti width={window.innerWidth} height={window.innerHeight} recycle={false} numberOfPieces={500} />
           <div className="max-w-md w-full text-center relative p-6">
             <h1 className="text-4xl md:text-5xl font-black text-gradient bg-clip-text animate-bounce">
               It's a Match!

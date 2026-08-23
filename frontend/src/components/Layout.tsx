@@ -24,10 +24,7 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [user?.profile?.latitude, user?.profile?.longitude]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+
 
   const navItems = [
     { path: '/', label: 'Discover', icon: Flame },
@@ -57,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex items-center space-x-2">
             <Flame className="w-8 h-8 text-rose-500 fill-rose-500 animate-pulse" />
             <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-tight text-gradient bg-clip-text leading-none">HeartSync</span>
+              <span className="text-xl font-bold tracking-tight text-gradient bg-clip-text leading-none">TapIn</span>
               <button
                 type="button"
                 onClick={() => setShowLocationModal(true)}
@@ -71,35 +68,32 @@ export default function Layout({ children }: LayoutProps) {
             </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                    isActive
-                      ? 'bg-rose-500/10 text-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.1)]'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-300"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden md:inline">Log out</span>
-          </button>
+          {/* Right Side Actions & Nav */}
+          <div className="flex items-center space-x-3">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex space-x-4">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      isActive
+                        ? 'bg-rose-500/10 text-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.1)]'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+            {/* Portal target for page-specific header actions */}
+            <div id="header-actions" className="flex items-center"></div>
+          </div>
         </div>
       </header>
 
@@ -110,7 +104,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Subtle Premium Footer (Desktop only) */}
       <footer className="hidden md:block py-6 border-t border-slate-900 text-center text-xs text-slate-600">
-        <p>&copy; 2026 HeartSync. 18+ Verification Mandatory. Block and report tools active.</p>
+        <p>&copy; 2026 TapIn. 18+ Verification Mandatory. Block and report tools active.</p>
       </footer>
 
       {/* Mobile Bottom Navigation Bar */}

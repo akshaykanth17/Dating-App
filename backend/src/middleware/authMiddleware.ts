@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'heartsync_jwt_access_secret_change_me_in_production_12345';
+const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'tapin_jwt_access_secret_change_me_in_production_12345';
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;

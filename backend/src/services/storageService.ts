@@ -76,7 +76,7 @@ export class S3StorageService implements IStorageService {
 
     // Then upload buffer to S3 using S3Client.send(new PutObjectCommand(...))
     console.log(`[S3StorageService] Uploading ${filename} to S3 bucket... (Simulated)`);
-    return `https://${process.env.S3_BUCKET_NAME || 'heartsync-bucket'}.s3.amazonaws.com/${filename}`;
+    return `https://${process.env.S3_BUCKET_NAME || 'tapin-bucket'}.s3.amazonaws.com/${filename}`;
   }
 
   async deletePhoto(fileUrl: string): Promise<void> {

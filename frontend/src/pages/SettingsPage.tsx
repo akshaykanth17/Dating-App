@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
-import { Settings, Lock, ShieldAlert, PlayCircle, MapPin } from 'lucide-react';
+import { Settings, Lock, ShieldAlert, PlayCircle, MapPin, LogOut } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
 import LocationPickerModal from '../components/LocationPickerModal';
 
@@ -12,6 +12,7 @@ interface ProfileData {
   ageInterestedInMin: number;
   ageInterestedInMax: number;
   distanceInterestedIn: number;
+  gendersInterestedIn: string[];
 }
 
 export default function SettingsPage() {
@@ -23,13 +24,13 @@ export default function SettingsPage() {
   const [rewatchCount, setRewatchCount] = useState(0);
 
   useEffect(() => {
-    const userKey = user?.id ? `heartsync_tutorial_rewatches_${user.id}` : 'heartsync_tutorial_rewatches';
+    const userKey = user?.id ? `tapin_tutorial_rewatches_${user.id}` : 'tapin_tutorial_rewatches';
     const count = parseInt(localStorage.getItem(userKey) || '0', 10);
     setRewatchCount(count);
   }, [user]);
 
   const handleRewatchClick = () => {
-    const userKey = user?.id ? `heartsync_tutorial_rewatches_${user.id}` : 'heartsync_tutorial_rewatches';
+    const userKey = user?.id ? `tapin_tutorial_rewatches_${user.id}` : 'tapin_tutorial_rewatches';
     const count = parseInt(localStorage.getItem(userKey) || '0', 10);
     if (count >= MAX_REWATCH_LIMIT) return;
 
@@ -43,6 +44,7 @@ export default function SettingsPage() {
   const [ageMin, setAgeMin] = useState(18);
   const [ageMax, setAgeMax] = useState(35);
   const [distance, setDistance] = useState(50);
+  const [gendersInterestedIn, setGendersInterestedIn] = useState<string[]>([]);
   const [locationName, setLocationName] = useState('');
   const [showLocationModal, setShowLocationModal] = useState(false);
 
@@ -64,6 +66,14 @@ export default function SettingsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Logout confirmation modal
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   useEffect(() => {
     if (user?.profile?.latitude && user?.profile?.longitude) {
       reverseGeocode(user.profile.latitude, user.profile.longitude).then(setLocationName);
@@ -77,6 +87,7 @@ export default function SettingsPage() {
         setAgeMin(data.ageInterestedInMin || 18);
         setAgeMax(data.ageInterestedInMax || 100);
         setDistance(data.distanceInterestedIn || 50);
+        setGendersInterestedIn(data.gendersInterestedIn || []);
       } catch (err) {
         console.error('[SettingsPage] Failed to fetch settings details:', err);
       }
@@ -95,6 +106,7 @@ export default function SettingsPage() {
         ageInterestedInMin: ageMin,
         ageInterestedInMax: ageMax,
         distanceInterestedIn: distance,
+        gendersInterestedIn: gendersInterestedIn,
       });
       setSettingsSuccess('Match preferences updated successfully!');
       updateUserProfile(updated);
@@ -165,6 +177,29 @@ export default function SettingsPage() {
             {settingsSuccess && <p className="text-xs text-emerald-400 mb-4">{settingsSuccess}</p>}
 
             <form onSubmit={handleSettingsSubmit} className="space-y-4">
+              {/* Gender Preference */}
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Interested in</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['male', 'female', 'other'].map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => {
+                        setGendersInterestedIn(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
+                      }}
+                      className={`py-2.5 rounded-xl text-sm font-semibold capitalize border transition-all ${
+                        gendersInterestedIn.includes(g)
+                          ? 'bg-rose-600 border-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]'
+                          : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'
+                      }`}
+                    >
+                      {g === 'male' ? '👨 Men' : g === 'female' ? '👩 Women' : '🌈 Other'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                   Maximum Distance ({distance} km)
@@ -349,6 +384,17 @@ export default function SettingsPage() {
               Delete Account
             </button>
           </div>
+
+          {/* Log Out */}
+          <div className="pt-2">
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="w-full p-4 rounded-2xl border border-slate-800 bg-slate-900/50 hover:bg-slate-800 flex items-center justify-center space-x-2 text-slate-300 hover:text-white transition-colors"
+            >
+              <LogOut className="w-5 h-5 text-rose-500" />
+              <span className="font-bold">Log Out</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -393,6 +439,39 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="glass max-w-xs w-full rounded-2xl p-6 border border-slate-800 text-center relative shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center mx-auto mb-4">
+              <LogOut className="w-6 h-6 text-rose-500" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-100">Log out?</h3>
+            <p className="text-slate-400 text-sm mt-2">
+              Are you sure you want to log out of your account?
+            </p>
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-2 text-sm font-semibold rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  handleLogout();
+                }}
+                className="flex-1 py-2 text-sm font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)]"
+              >
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Location Picker Modal */}
       <LocationPickerModal
         isOpen={showLocationModal}

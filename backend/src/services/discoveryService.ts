@@ -36,7 +36,14 @@ export class DiscoveryService {
    * 4. Users who have already been swiped (liked/passed) are excluded.
    * 5. Blocked users are excluded.
    */
-  static async getCandidates(userId: string, limit = 20): Promise<DiscoveryCandidate[]> {
+  static async getCandidates(
+    userId: string, 
+    limit = 20, 
+    preferredGender?: string,
+    overrideAgeMin?: number,
+    overrideAgeMax?: number,
+    overrideDistance?: number
+  ): Promise<DiscoveryCandidate[]> {
     // 1. Fetch the swiper's profile
     const swiperProfile = await prisma.profile.findUnique({
       where: { userId },
@@ -57,6 +64,16 @@ export class DiscoveryService {
       distanceInterestedIn: swiperDistanceMax,
       gendersInterestedIn: swiperInterests,
     } = swiperProfile;
+
+    // Apply gender filter if provided
+    let finalInterests = swiperInterests;
+    if (preferredGender && preferredGender !== 'all') {
+      finalInterests = preferredGender.split(',').filter(Boolean);
+    }
+
+    const finalAgeMin = overrideAgeMin ?? swiperAgeMin;
+    const finalAgeMax = overrideAgeMax ?? swiperAgeMax;
+    const finalDistance = overrideDistance ?? swiperDistanceMax;
 
     // Convert date to ISO string for PG
     const swiperBirthdateStr = swiperBirthdate.toISOString();
@@ -98,14 +115,14 @@ export class DiscoveryService {
       WHERE 
         p."userId" != ${userId}
         AND u."isVerified" = true
-        AND u.email NOT LIKE '%@demo.heartsync.app'
-        AND u.email NOT LIKE '%@seed.heartsync.app'
+        AND u.email NOT LIKE '%@demo.tapin.app'
+        AND u.email NOT LIKE '%@seed.tapin.app'
         -- Match Gender: Candidate gender must be in swiper interests, and swiper gender must be in candidate interests
-        AND p.gender = ANY(${swiperInterests})
+        AND p.gender = ANY(${finalInterests})
         AND ${swiperGender} = ANY(p."gendersInterestedIn")
         -- Match Age: Candidate age must be in swiper range, and swiper age must be in candidate range
-        AND EXTRACT(YEAR FROM AGE(p.birthdate)) >= ${swiperAgeMin}
-        AND EXTRACT(YEAR FROM AGE(p.birthdate)) <= ${swiperAgeMax}
+        AND EXTRACT(YEAR FROM AGE(p.birthdate)) >= ${finalAgeMin}
+        AND EXTRACT(YEAR FROM AGE(p.birthdate)) <= ${finalAgeMax}
         AND EXTRACT(YEAR FROM AGE(CAST(${swiperBirthdateStr} AS timestamp))) >= p."ageInterestedInMin"
         AND EXTRACT(YEAR FROM AGE(CAST(${swiperBirthdateStr} AS timestamp))) <= p."ageInterestedInMax"
         -- Exclude already swiped profiles
@@ -127,7 +144,7 @@ export class DiscoveryService {
             sin(radians(${lat})) * sin(radians(p.latitude)), 
             -1.0
           ), 1.0)
-        )) <= ${swiperDistanceMax}
+        )) <= ${finalDistance}
       ORDER BY "isSuperLike" DESC, distance ASC
       LIMIT ${limit};
     `;

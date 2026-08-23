@@ -49,7 +49,7 @@ export default function Register() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-3">
             <Heart className="w-8 h-8 text-rose-500 fill-rose-500 animate-pulse" />
-            <span className="text-3xl font-black text-white tracking-tight">HeartSync</span>
+            <span className="text-3xl font-black text-white tracking-tight">TapIn</span>
           </div>
           <p className="text-slate-400 text-sm">Create an account to continue</p>
         </div>

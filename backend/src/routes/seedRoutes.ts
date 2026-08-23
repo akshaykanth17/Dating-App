@@ -5,14 +5,14 @@ import { cleanAllDummyData } from '../services/seedService';
 const router = Router();
 const prisma = new PrismaClient();
 
-const SEED_SECRET = process.env.SEED_SECRET || 'heartsync-seed-2026';
+const SEED_SECRET = process.env.SEED_SECRET || 'tapin-seed-2026';
 
 // GET & POST /api/seed/clean or /api/seed
 router.all('/clean', async (req: Request, res: Response) => {
   const secret = (req.query.secret || req.body?.secret) as string;
 
   if (process.env.NODE_ENV === 'production' && secret !== SEED_SECRET) {
-    return res.status(401).json({ error: 'Unauthorized. Provide correct seed secret (?secret=heartsync-seed-2026).' });
+    return res.status(401).json({ error: 'Unauthorized. Provide correct seed secret (?secret=tapin-seed-2026).' });
   }
 
   try {

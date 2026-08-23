@@ -54,6 +54,10 @@ export class HangoutController {
    */
   static async getHangoutsFeed(req: AuthenticatedRequest, res: Response) {
     const userId = req.userId!;
+    const gender = req.query.gender as string | undefined;
+    const ageMin = req.query.ageMin ? parseInt(req.query.ageMin as string, 10) : undefined;
+    const ageMax = req.query.ageMax ? parseInt(req.query.ageMax as string, 10) : undefined;
+    const distanceFilter = req.query.distance ? parseInt(req.query.distance as string, 10) : undefined;
 
     try {
       // 1. Fetch current user's profile and blocks
@@ -73,6 +77,20 @@ export class HangoutController {
       const now = new Date();
 
       if (swiperProfile) {
+        let finalInterests = swiperProfile.gendersInterestedIn;
+        if (gender && gender !== 'all') {
+          finalInterests = gender.split(',').filter(Boolean);
+        }
+
+        const finalAgeMin = ageMin ?? swiperProfile.ageInterestedInMin;
+        const finalAgeMax = ageMax ?? swiperProfile.ageInterestedInMax;
+        const finalDistance = distanceFilter ?? swiperProfile.distanceInterestedIn;
+
+        const maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() - finalAgeMin);
+        const minDate = new Date();
+        minDate.setFullYear(minDate.getFullYear() - finalAgeMax - 1); // -1 to include the full year
+
         hangouts = await prisma.hangout.findMany({
           where: {
             creatorId: {
@@ -85,12 +103,16 @@ export class HangoutController {
             creator: {
               email: {
                 not: {
-                  endsWith: '@demo.heartsync.app',
+                  endsWith: '@demo.tapin.app',
                 },
               },
               profile: {
-                gender: { in: swiperProfile.gendersInterestedIn },
-                gendersInterestedIn: { has: swiperProfile.gender }
+                gender: { in: finalInterests },
+                gendersInterestedIn: { has: swiperProfile.gender },
+                birthdate: {
+                  gte: minDate,
+                  lte: maxDate
+                }
               }
             }
           },
@@ -110,8 +132,36 @@ export class HangoutController {
           orderBy: {
             eventDate: 'asc'
           },
-          take: 30
+          take: 100 // Fetch more initially to allow for in-memory distance filtering
         });
+
+        // In-memory distance filtering
+        if (finalDistance && swiperProfile.latitude && swiperProfile.longitude) {
+          hangouts = hangouts.filter((h) => {
+            const hLat = h.creator.profile?.latitude;
+            const hLon = h.creator.profile?.longitude;
+            if (!hLat || !hLon) return false;
+
+            const lat1 = swiperProfile.latitude!;
+            const lon1 = swiperProfile.longitude!;
+            const lat2 = hLat;
+            const lon2 = hLon;
+
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const d = R * c;
+            
+            return d <= finalDistance;
+          });
+        }
+        
+        // Limit after distance filter
+        hangouts = hangouts.slice(0, 30);
       }
 
       const formattedHangouts = hangouts.map((h) => {
@@ -187,7 +237,8 @@ export class HangoutController {
           OR: [
             { user1Id: userId, user2Id: targetUserId },
             { user1Id: targetUserId, user2Id: userId },
-          ]
+          ],
+          matchType: 'HANGOUT'
         }
       });
 
@@ -196,6 +247,8 @@ export class HangoutController {
           data: {
             user1Id: userId,
             user2Id: targetUserId,
+            matchType: 'HANGOUT',
+            hangoutId: hangout.id
           }
         });
       }

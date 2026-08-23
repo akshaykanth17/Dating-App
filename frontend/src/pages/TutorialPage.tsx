@@ -70,17 +70,17 @@ export default function TutorialPage() {
 
   const finishTutorial = () => {
     if (user?.id) {
-      localStorage.setItem(`heartsync_tutorial_completed_${user.id}`, 'true');
+      localStorage.setItem(`tapin_tutorial_completed_${user.id}`, 'true');
     }
-    localStorage.setItem('heartsync_tutorial_completed', 'true');
-    localStorage.removeItem('heartsync_trigger_tutorial');
+    localStorage.setItem('tapin_tutorial_completed', 'true');
+    localStorage.removeItem('tapin_trigger_tutorial');
     navigate('/');
   };
 
   const slides = [
     // Slide 0: Welcome & Setup Complete
     {
-      badge: 'Welcome to HeartSync',
+      badge: 'Welcome to TapIn',
       title: user?.profile?.name ? `You're ready, ${user.profile.name}!` : "You're All Set!",
       subtitle: 'Your profile is live and verified. Complete this quick interactive practice to learn how swiping, hangouts, and matches work.',
       accentGlow: 'bg-rose-500/20',
@@ -472,7 +472,7 @@ export default function TutorialPage() {
     {
       badge: 'Step 5: Safety & Guidelines',
       title: 'Safe, Respectful & Verified',
-      subtitle: 'Your security is our top priority. HeartSync is strictly 18+, with active moderation, one-tap block/report tools, and secure messaging.',
+      subtitle: 'Your security is our top priority. TapIn is strictly 18+, with active moderation, one-tap block/report tools, and secure messaging.',
       accentGlow: 'bg-emerald-500/20',
       isInteractive: false,
       illustration: (
@@ -692,7 +692,7 @@ export default function TutorialPage() {
               : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/25'
           }`}
         >
-          <span>{isLast ? 'Enter HeartSync 🚀' : 'Next'}</span>
+          <span>{isLast ? 'Enter TapIn 🚀' : 'Next'}</span>
           {!isLast && <ChevronRight className="w-4 h-4" />}
         </button>
       </div>

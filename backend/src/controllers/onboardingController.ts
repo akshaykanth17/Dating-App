@@ -47,7 +47,7 @@ export class OnboardingController {
     const age = getAge(birthdateObj);
     if (age < 18) {
       return res.status(400).json({
-        error: 'You must be at least 18 years old to use HeartSync.',
+        error: 'You must be at least 18 years old to use TapIn.',
         code: 'UNDERAGE',
       });
     }
@@ -119,7 +119,7 @@ export class OnboardingController {
       });
 
       return res.status(200).json({
-        message: 'Onboarding complete! Welcome to HeartSync.',
+        message: 'Onboarding complete! Welcome to TapIn.',
         isOnboarded: user.isOnboarded,
       });
     } catch (error) {

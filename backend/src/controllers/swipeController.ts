@@ -9,9 +9,13 @@ export class SwipeController {
   static async getDiscoveryFeed(req: AuthenticatedRequest, res: Response) {
     const userId = req.userId!;
     const limit = req.query.limit ? Number(req.query.limit) : 20;
+    const gender = req.query.gender as string | undefined;
+    const ageMin = req.query.ageMin ? parseInt(req.query.ageMin as string, 10) : undefined;
+    const ageMax = req.query.ageMax ? parseInt(req.query.ageMax as string, 10) : undefined;
+    const distance = req.query.distance ? parseInt(req.query.distance as string, 10) : undefined;
 
     try {
-      const candidates = await DiscoveryService.getCandidates(userId, limit);
+      const candidates = await DiscoveryService.getCandidates(userId, limit, gender, ageMin, ageMax, distance);
       return res.status(200).json(candidates);
     } catch (error) {
       console.error('[SwipeController.getDiscoveryFeed] Error:', error);
@@ -107,9 +111,9 @@ export class SwipeController {
 
           const match = await prisma.match.upsert({
             where: {
-              user1Id_user2Id: { user1Id, user2Id },
+              user1Id_user2Id_matchType: { user1Id, user2Id, matchType: 'DATING' },
             },
-            create: { user1Id, user2Id },
+            create: { user1Id, user2Id, matchType: 'DATING' },
             update: {}, // keep existing if already created somehow
           });
 
@@ -175,6 +179,9 @@ export class SwipeController {
             { user2Id: userId },
           ],
         },
+        include: {
+          hangout: true,
+        },
         orderBy: { createdAt: 'desc' },
       });
 
@@ -203,6 +210,10 @@ export class SwipeController {
             id: m.id,
             user1Id: m.user1Id,
             user2Id: m.user2Id,
+            matchType: m.matchType,
+            user1Continue: m.user1Continue,
+            user2Continue: m.user2Continue,
+            hangoutEventDate: m.hangout?.eventDate || null,
             otherProfile: otherProfile ? {
               id: otherProfile.id,
               userId: otherProfile.userId,
@@ -226,6 +237,61 @@ export class SwipeController {
       return res.status(200).json(matchDTOs);
     } catch (error) {
       console.error('[SwipeController.getMatches] Error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  static async continueMatch(req: AuthenticatedRequest, res: Response) {
+    const userId = req.userId!;
+    const { id } = req.params;
+
+    try {
+      const match = await prisma.match.findUnique({ where: { id } });
+      if (!match) return res.status(404).json({ error: 'Match not found' });
+
+      if (match.user1Id !== userId && match.user2Id !== userId) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+
+      const isUser1 = match.user1Id === userId;
+      
+      const updatedMatch = await prisma.match.update({
+        where: { id },
+        data: isUser1 ? { user1Continue: true } : { user2Continue: true }
+      });
+
+      // If both have continued, upgrade to DATING
+      if (updatedMatch.user1Continue && updatedMatch.user2Continue) {
+        await prisma.match.update({
+          where: { id },
+          data: { matchType: 'DATING' }
+        });
+      }
+
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('[SwipeController.continueMatch] Error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  static async unmatch(req: AuthenticatedRequest, res: Response) {
+    const userId = req.userId!;
+    const { id } = req.params;
+
+    try {
+      const match = await prisma.match.findUnique({ where: { id } });
+      if (!match) return res.status(404).json({ error: 'Match not found' });
+
+      if (match.user1Id !== userId && match.user2Id !== userId) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+
+      await prisma.match.delete({ where: { id } });
+
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('[SwipeController.unmatch] Error:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   }

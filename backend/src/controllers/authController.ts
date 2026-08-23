@@ -8,8 +8,8 @@ import { getQueueService } from '../services/queueService';
 const prisma = new PrismaClient();
 const queueService = getQueueService();
 
-const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'heartsync_jwt_access_secret_change_me_in_production_12345';
-const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || 'heartsync_jwt_refresh_secret_change_me_in_production_12345';
+const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'tapin_jwt_access_secret_change_me_in_production_12345';
+const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || 'tapin_jwt_refresh_secret_change_me_in_production_12345';
 
 // Helper function to check if user is 18+
 function getAge(birthdate: Date): number {
@@ -154,7 +154,7 @@ export class AuthController {
   static async demoLogin(req: Request, res: Response) {
     try {
       const mockUser = await prisma.user.findFirst({
-        where: { email: { endsWith: '@seed.heartsync.app' } },
+        where: { email: { endsWith: '@seed.tapin.app' } },
         include: { profile: { include: { photos: true } } },
       });
       if (!mockUser) return res.status(404).json({ error: 'No demo user found. Run seed script first.' });

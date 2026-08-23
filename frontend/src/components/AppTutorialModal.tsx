@@ -37,7 +37,7 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
   const steps = [
     // Step 0: Welcome & Setup Complete
     {
-      title: userName ? `Welcome aboard, ${userName}!` : 'Welcome to HeartSync!',
+      title: userName ? `Welcome aboard, ${userName}!` : 'Welcome to TapIn!',
       subtitle: 'Your profile is live and ready',
       icon: Sparkles,
       iconBg: 'from-amber-500 to-rose-500',
@@ -62,7 +62,7 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
           <div className="space-y-2">
             <h3 className="text-xl font-black text-slate-100">You're Ready to Connect</h3>
             <p className="text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">
-              We've curated nearby people who share your vibe and interests. Take a quick 30-second tour to discover all of HeartSync's features!
+              We've curated nearby people who share your vibe and interests. Take a quick 30-second tour to discover all of TapIn's features!
             </p>
           </div>
 

@@ -112,10 +112,15 @@ model Match {
   user1     User      @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
   user2Id   String
   user2     User      @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  messages  Message[]
+  matchType     String    @default("DATING") // "DATING" or "HANGOUT"
+  hangoutId     String?
+  hangout       Hangout?  @relation(fields: [hangoutId], references: [id], onDelete: SetNull)
+  user1Continue Boolean   @default(false)
+  user2Continue Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  messages      Message[]
 
-  @@unique([user1Id, user2Id])
+  @@unique([user1Id, user2Id, matchType])
   @@index([user1Id])
   @@index([user2Id])
 }
@@ -165,6 +170,7 @@ model Hangout {
   location    String
   eventDate   DateTime
   createdAt   DateTime @default(now())
+  matches     Match[]
 
   @@index([creatorId])
   @@index([eventDate])

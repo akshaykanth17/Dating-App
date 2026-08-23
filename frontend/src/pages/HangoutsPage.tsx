@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { api } from '../services/api';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import {
   Calendar, MapPin, Clock, Plus, Heart, X, User as UserIcon,
-  RefreshCw, Map, Sparkles, Coffee, ExternalLink
+  RefreshCw, Map, Sparkles, Coffee, ExternalLink, Settings2
 } from 'lucide-react';
+import FilterModal, { type FilterState } from '../components/FilterModal';
+import Confetti from 'react-confetti';
 import ProfileCardContent from '../components/ProfileCardContent';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPhotoUrl, handleImageError } from '../utils/photoUrl';
@@ -58,7 +61,7 @@ function formatEventDate(dateStr: string): string {
   return `${d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${timeStr}`;
 }
 
-const SWIPED_KEY = 'heartsync_swiped_hangouts';
+const SWIPED_KEY = 'tapin_swiped_hangouts';
 
 function getSwipedIds(): Set<string> {
   try {
@@ -81,6 +84,21 @@ export default function HangoutsPage() {
   const [hangouts, setHangouts] = useState<Hangout[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterState>({
+    genders: ['male', 'female', 'other'],
+    ageMin: 18,
+    ageMax: 100,
+    distance: 150
+  });
+
+  const [headerNode, setHeaderNode] = useState<Element | null>(null);
+
+  useEffect(() => {
+    setHeaderNode(document.getElementById('header-actions'));
+  }, []);
 
   // Profile detail drawer
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
@@ -113,7 +131,13 @@ export default function HangoutsPage() {
   const fetchHangouts = async () => {
     setLoading(true);
     try {
-      const data = await api.get<Hangout[]>('/hangouts');
+      const params = new URLSearchParams({
+        gender: activeFilters.genders.join(','),
+        ageMin: activeFilters.ageMin.toString(),
+        ageMax: activeFilters.ageMax.toString(),
+        distance: activeFilters.distance.toString()
+      });
+      const data = await api.get<Hangout[]>(`/hangouts?${params.toString()}`);
       // Filter out already-swiped hangouts
       const swiped = getSwipedIds();
       const unseen = data.filter((h) => !swiped.has(h.id));
@@ -128,17 +152,19 @@ export default function HangoutsPage() {
   };
 
   useEffect(() => {
-    fetchHangouts();
-    const userKey = user?.id ? `heartsync_hangouts_toast_v2_${user.id}` : 'heartsync_hangouts_toast_v2';
-    const hasSeenConcept = localStorage.getItem(userKey);
-    if (!hasSeenConcept) {
-      setShowConceptToaster(true);
+    if (user) {
+      fetchHangouts();
+      const userKey = `tapin_hangouts_toast_v2_${user.id}`;
+      const hasSeenConcept = localStorage.getItem(userKey);
+      if (!hasSeenConcept) {
+        setShowConceptToaster(true);
+      }
     }
-  }, [user]);
+  }, [user, activeFilters]);
 
   const dismissToaster = () => {
     setShowConceptToaster(false);
-    const userKey = user?.id ? `heartsync_hangouts_toast_v2_${user.id}` : 'heartsync_hangouts_toast_v2';
+    const userKey = user?.id ? `tapin_hangouts_toast_v2_${user.id}` : 'tapin_hangouts_toast_v2';
     localStorage.setItem(userKey, 'true');
   };
 
@@ -235,7 +261,26 @@ export default function HangoutsPage() {
 
   return (
     <Layout>
-      <div className="flex flex-col items-center w-full max-w-sm mx-auto pb-8">
+      {/* Filter Button Portaled into Header */}
+      {headerNode && user?.isVerified && createPortal(
+        <button
+          onClick={() => setIsFilterOpen(true)}
+          className="p-2 rounded-full hover:bg-slate-800 transition-colors text-slate-400 hover:text-rose-500 flex items-center justify-center cursor-pointer"
+          title="Filters"
+        >
+          <Settings2 className="w-5 h-5" />
+        </button>,
+        headerNode
+      )}
+
+      <FilterModal
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        initialFilters={activeFilters}
+        onSave={(filters) => setActiveFilters(filters)}
+      />
+
+      <div className="flex flex-col items-center w-full max-w-sm mx-auto pb-8 mt-2">
         {/* Header */}
         <div className="w-full flex items-center justify-between mb-6">
           <div>
@@ -252,13 +297,16 @@ export default function HangoutsPage() {
             </h1>
             <p className="text-slate-500 text-xs mt-0.5">Real-world meetup events</p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center space-x-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-xs font-bold shadow-[0_0_15px_rgba(244,63,94,0.3)] transition-all"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Post Event</span>
-          </button>
+          
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center space-x-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-xs font-bold shadow-[0_0_15px_rgba(244,63,94,0.3)] transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Post Event</span>
+            </button>
+          </div>
         </div>
 
         {error && error !== 'Profile not found' && (
@@ -697,7 +745,8 @@ export default function HangoutsPage() {
       {/* Match Celebration Overlay */}
       {matchResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
-          <div className="max-w-sm w-full text-center">
+          <Confetti width={window.innerWidth} height={window.innerHeight} recycle={false} numberOfPieces={500} />
+          <div className="max-w-sm w-full text-center relative z-10">
             <div className="text-5xl mb-3">🎉</div>
             <h1 className="text-4xl font-black text-gradient bg-clip-text">Let's Connect!</h1>
             <p className="text-slate-300 text-sm mt-3 leading-relaxed">
@@ -708,7 +757,7 @@ export default function HangoutsPage() {
               <button
                 onClick={() => {
                   setMatchResult(null);
-                  navigate('/chat');
+                  navigate('/chat', { state: { tab: 'HANGOUT' } });
                 }}
                 className="w-full py-3 rounded-full bg-gradient text-white font-bold shadow-lg shadow-rose-500/30 hover:opacity-90 transition-opacity text-sm"
               >

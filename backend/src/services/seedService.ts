@@ -23,7 +23,7 @@ export interface DummyProfileDef {
 export const DUMMY_PROFILES: DummyProfileDef[] = [
   {
     name: 'Priya Sharma',
-    email: 'priya.sharma@demo.heartsync.app',
+    email: 'priya.sharma@demo.tapin.app',
     age: 24,
     gender: 'female',
     bio: 'Product designer with a penchant for specialty pour-overs, indie gigs, and impulsive weekend road trips. Let’s find the best cheesecake in town! ☕✨',
@@ -47,7 +47,7 @@ export const DUMMY_PROFILES: DummyProfileDef[] = [
   },
   {
     name: 'Rahul Menon',
-    email: 'rahul.menon@demo.heartsync.app',
+    email: 'rahul.menon@demo.tapin.app',
     age: 26,
     gender: 'male',
     bio: 'Software engineer by day, amateur chef by night. Training for my second half-marathon. Always down for good banter and vinyl listening sessions. 🏃‍♂️🍝',
@@ -71,7 +71,7 @@ export const DUMMY_PROFILES: DummyProfileDef[] = [
   },
   {
     name: 'Ananya Roy',
-    email: 'ananya.roy@demo.heartsync.app',
+    email: 'ananya.roy@demo.tapin.app',
     age: 23,
     gender: 'female',
     bio: 'Art director & film photographer. Capturing golden hours and collecting vintage postcards. Teach me something new and I’ll bake you cinnamon rolls! 📸🥐',
@@ -95,7 +95,7 @@ export const DUMMY_PROFILES: DummyProfileDef[] = [
   },
   {
     name: 'Vikramaditya V',
-    email: 'vikram.v@demo.heartsync.app',
+    email: 'vikram.v@demo.tapin.app',
     age: 27,
     gender: 'male',
     bio: 'Product manager, summit chaser, and proud dog dad to a golden retriever named Milo. Looking for someone to share camping stories and rooftop dinners with. 🐾🏔️',
@@ -119,7 +119,7 @@ export const DUMMY_PROFILES: DummyProfileDef[] = [
   },
   {
     name: 'Sneha Patel',
-    email: 'sneha.patel@demo.heartsync.app',
+    email: 'sneha.patel@demo.tapin.app',
     age: 25,
     gender: 'female',
     bio: 'Neuroscience researcher fascinated by brain plasticity and psychology. Also a classical Bharatnatyam dancer and passionate foodie. 🧠💃',
@@ -143,7 +143,7 @@ export const DUMMY_PROFILES: DummyProfileDef[] = [
   },
   {
     name: 'Kabir Das',
-    email: 'kabir.das@demo.heartsync.app',
+    email: 'kabir.das@demo.tapin.app',
     age: 28,
     gender: 'male',
     bio: 'Commercial pilot and adventure photographer. 42 countries explored and counting. Back in town looking for spontaneous sunset chases and live jazz. ✈️🎷',
@@ -167,7 +167,7 @@ export const DUMMY_PROFILES: DummyProfileDef[] = [
   },
   {
     name: 'Diya Nair',
-    email: 'diya.nair@demo.heartsync.app',
+    email: 'diya.nair@demo.tapin.app',
     age: 24,
     gender: 'female',
     bio: 'Sustainable architect designing green urban spaces. Plant mom to 23 succulents. I love flea market hunting, pottery workshops, and matcha lattes! 🌿🍵',
@@ -191,7 +191,7 @@ export const DUMMY_PROFILES: DummyProfileDef[] = [
   },
   {
     name: 'Rohan Kapoor',
-    email: 'rohan.kapoor@demo.heartsync.app',
+    email: 'rohan.kapoor@demo.tapin.app',
     age: 27,
     gender: 'male',
     bio: 'AI researcher & founder. Passionate about badminton, acoustic guitar, and late-night philosophical conversations over hot chocolate. 🏸🎸',
@@ -220,56 +220,56 @@ export const DUMMY_HANGOUTS = [
     title: '☕ Specialty Coffee & Concept Sketching',
     location: 'Third Wave Coffee / Downtown Cafe',
     hoursOffset: 24, // tomorrow
-    creatorEmail: 'priya.sharma@demo.heartsync.app',
+    creatorEmail: 'priya.sharma@demo.tapin.app',
   },
   {
     title: '🎬 Interstellar IMAX Screening & Pizza',
     location: 'PVR IMAX / Central Mall',
     hoursOffset: 36,
-    creatorEmail: 'rahul.menon@demo.heartsync.app',
+    creatorEmail: 'rahul.menon@demo.tapin.app',
   },
   {
     title: '📸 Sunset Film Photography Walk',
     location: 'Heritage Fort & Lake Viewpoint',
     hoursOffset: 48,
-    creatorEmail: 'ananya.roy@demo.heartsync.app',
+    creatorEmail: 'ananya.roy@demo.tapin.app',
   },
   {
     title: '🏔️ Saturday Morning Ridge Hike & Breakfast',
     location: 'Nelliyampathy Hill Trails',
     hoursOffset: 72,
-    creatorEmail: 'vikram.v@demo.heartsync.app',
+    creatorEmail: 'vikram.v@demo.tapin.app',
   },
   {
     title: '🎲 Board Games & Artisanal Kombucha Night',
     location: 'Dice & Brew Social Lounge',
     hoursOffset: 60,
-    creatorEmail: 'sneha.patel@demo.heartsync.app',
+    creatorEmail: 'sneha.patel@demo.tapin.app',
   },
   {
     title: '🎷 Live Sunset Jazz & Rooftop Mocktails',
     location: 'Skyline Terrace Lounge',
     hoursOffset: 84,
-    creatorEmail: 'kabir.das@demo.heartsync.app',
+    creatorEmail: 'kabir.das@demo.tapin.app',
   },
   {
     title: '🌿 Succulent Pottery Workshop & Matcha',
     location: 'Clay Studio & Greenhouse',
     hoursOffset: 96,
-    creatorEmail: 'diya.nair@demo.heartsync.app',
+    creatorEmail: 'diya.nair@demo.tapin.app',
   },
   {
     title: '🏸 Evening Badminton & Smoothie Run',
     location: 'Smash Sports Arena',
     hoursOffset: 30,
-    creatorEmail: 'rohan.kapoor@demo.heartsync.app',
+    creatorEmail: 'rohan.kapoor@demo.tapin.app',
   }
 ];
 
 export async function seedDummyDataIfEmpty(prisma: PrismaClient) {
   try {
     const existingCount = await prisma.user.count({
-      where: { email: { contains: '@demo.heartsync.app' } }
+      where: { email: { contains: '@demo.tapin.app' } }
     });
 
     if (existingCount >= 6) {
@@ -391,8 +391,8 @@ export async function cleanAllDummyData(prisma: PrismaClient): Promise<{ deleted
     const demoUsers = await prisma.user.findMany({
       where: {
         OR: [
-          { email: { endsWith: '@demo.heartsync.app' } },
-          { email: { endsWith: '@seed.heartsync.app' } },
+          { email: { endsWith: '@demo.tapin.app' } },
+          { email: { endsWith: '@seed.tapin.app' } },
         ]
       },
       select: { id: true }

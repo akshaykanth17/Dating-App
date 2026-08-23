@@ -5,7 +5,7 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
 const prisma = new PrismaClient();
-const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'heartsync_jwt_access_secret_change_me_in_production_12345';
+const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'tapin_jwt_access_secret_change_me_in_production_12345';
 
 // Initialize Firebase Admin SDK (only once)
 let adminApp: App;
@@ -17,7 +17,7 @@ if (getApps().length === 0) {
   if (serviceAccount) {
     adminApp = initializeApp({ credential: cert(serviceAccount) });
   } else {
-    adminApp = initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID || 'heartsync-6cf36' });
+    adminApp = initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID || 'tapin-6cf36' });
   }
 } else {
   adminApp = getApps()[0];

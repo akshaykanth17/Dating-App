@@ -1,5 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const TOKEN_KEY = 'heartsync_token';
+const TOKEN_KEY = 'tapin_token';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number>;

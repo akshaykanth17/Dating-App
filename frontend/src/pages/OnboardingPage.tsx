@@ -112,7 +112,7 @@ export default function OnboardingPage() {
     if (val) {
       const age = calculateAge(val);
       if (age < 18) {
-        setAgeError('You must be at least 18 years old to use HeartSync.');
+        setAgeError('You must be at least 18 years old to use TapIn.');
       } else {
         setAgeError('');
       }
@@ -315,8 +315,9 @@ export default function OnboardingPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-2">
             <Heart className="w-7 h-7 text-rose-500 fill-rose-500" />
-            <span className="text-2xl font-black text-white tracking-tight">HeartSync</span>
+            <span className="text-2xl font-black text-white tracking-tight">TapIn</span>
           </div>
+          <p className="text-rose-400 font-medium text-sm mb-1">Tap into real connections.</p>
           <p className="text-slate-400 text-sm">Let's set up your profile</p>
         </div>
 
@@ -765,10 +766,10 @@ export default function OnboardingPage() {
                 <button
                   onClick={handleUploadPhoto}
                   disabled={loading}
-                  className="w-full py-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-sm font-semibold hover:bg-slate-700 transition-colors flex items-center justify-center space-x-2"
+                  className="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold shadow-lg shadow-rose-500/30 transition-all transform active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:hover:bg-rose-600"
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-                  <span>{loading ? 'Uploading...' : 'Upload Photo'}</span>
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>{loading ? 'Uploading...' : 'Upload'}</span>
                 </button>
               )}
 
