@@ -291,7 +291,7 @@ export default function OnboardingPage() {
     try {
       await api.post('/onboarding/complete', {});
       setOnboarded(true);
-      navigate('/');
+      navigate('/tutorial');
     } catch (err: any) {
       setError(err.message || 'Failed to complete onboarding');
     } finally {

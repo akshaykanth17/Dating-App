@@ -11,6 +11,7 @@ const swipeLimiter = rateLimiter(15 * 60 * 1000, 100, 'swipe');
 router.use(authMiddleware);
 
 router.get('/discovery', SwipeController.getDiscoveryFeed);
+router.get('/super-like-status', SwipeController.getSuperLikeStatus);
 router.post('/', swipeLimiter, SwipeController.swipe);
 router.get('/matches', SwipeController.getMatches);
 

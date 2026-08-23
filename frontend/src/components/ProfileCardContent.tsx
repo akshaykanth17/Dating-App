@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserIcon } from 'lucide-react';
+import { UserIcon, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -29,6 +29,7 @@ export interface ProfileCardData {
   favoriteSpot?: string;
   photos?: { id: string; url: string; isPrimary: boolean }[];
   prompts?: { question: string; answer: string }[];
+  isSuperLike?: boolean;
 }
 
 interface ProfileCardContentProps {
@@ -64,6 +65,12 @@ export default function ProfileCardContent({ candidate, isTop, likeOpacity, pass
 
       {/* Primary Image Section */}
       <div className="relative w-full aspect-[3/4] md:aspect-[3.2/4]">
+        {candidate.isSuperLike && (
+          <div className="absolute top-4 left-4 z-40 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-amber-500 text-white font-black text-xs shadow-lg shadow-amber-500/30 flex items-center space-x-1.5 border border-amber-300/40 animate-pulse">
+            <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+            <span>SUPER LIKED YOU!</span>
+          </div>
+        )}
         {primaryPhoto ? (
           <img
             src={

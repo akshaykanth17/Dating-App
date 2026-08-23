@@ -8,6 +8,7 @@ import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import HangoutsPage from './pages/HangoutsPage';
 import OnboardingPage from './pages/OnboardingPage';
+import TutorialPage from './pages/TutorialPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -51,6 +52,7 @@ function AppRoutes() {
     <SocketProvider>
       <Routes>
         <Route path="/" element={<SwipePage />} />
+        <Route path="/tutorial" element={<TutorialPage />} />
         <Route path="/hangouts" element={<HangoutsPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/profile" element={<ProfilePage />} />

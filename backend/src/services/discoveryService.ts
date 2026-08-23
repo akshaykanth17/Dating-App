@@ -23,6 +23,7 @@ export interface DiscoveryCandidate {
   height?: number;
   weight?: number;
   prompts?: { question: string; answer: string }[];
+  isSuperLike?: boolean;
 }
 
 export class DiscoveryService {
@@ -81,6 +82,9 @@ export class DiscoveryService {
         p.gym,
         p.height,
         p.weight,
+        (EXISTS (
+          SELECT 1 FROM "Swipe" s WHERE s."swiperId" = p."userId" AND s."swipedId" = ${userId} AND s.type = 'SUPER_LIKE'
+        )) AS "isSuperLike",
         (6371 * acos(
           LEAST(GREATEST(
             cos(radians(${lat})) * cos(radians(p.latitude)) * 
@@ -122,7 +126,7 @@ export class DiscoveryService {
             -1.0
           ), 1.0)
         )) <= ${swiperDistanceMax}
-      ORDER BY distance ASC
+      ORDER BY "isSuperLike" DESC, distance ASC
       LIMIT ${limit};
     `;
 
@@ -186,6 +190,7 @@ export class DiscoveryService {
         height: c.height,
         weight: c.weight,
         prompts: candidatePrompts,
+        isSuperLike: Boolean(c.isSuperLike),
       };
     });
   }

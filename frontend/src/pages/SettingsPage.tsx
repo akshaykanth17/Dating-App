@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
-import { Settings, Lock, ShieldAlert } from 'lucide-react';
+import { Settings, Lock, ShieldAlert, PlayCircle } from 'lucide-react';
 
 interface ProfileData {
   id: string;
@@ -13,8 +13,29 @@ interface ProfileData {
 }
 
 export default function SettingsPage() {
-  const { logout, updateUserProfile } = useAuth();
+  const { user, logout, updateUserProfile } = useAuth();
   const navigate = useNavigate();
+
+  // Tutorial re-watch limit (Max 3 times)
+  const MAX_REWATCH_LIMIT = 3;
+  const [rewatchCount, setRewatchCount] = useState(0);
+
+  useEffect(() => {
+    const userKey = user?.id ? `heartsync_tutorial_rewatches_${user.id}` : 'heartsync_tutorial_rewatches';
+    const count = parseInt(localStorage.getItem(userKey) || '0', 10);
+    setRewatchCount(count);
+  }, [user]);
+
+  const handleRewatchClick = () => {
+    const userKey = user?.id ? `heartsync_tutorial_rewatches_${user.id}` : 'heartsync_tutorial_rewatches';
+    const count = parseInt(localStorage.getItem(userKey) || '0', 10);
+    if (count >= MAX_REWATCH_LIMIT) return;
+
+    const newCount = count + 1;
+    localStorage.setItem(userKey, newCount.toString());
+    setRewatchCount(newCount);
+    navigate('/tutorial');
+  };
 
   // Settings fields
   const [ageMin, setAgeMin] = useState(18);
@@ -240,6 +261,40 @@ export default function SettingsPage() {
                 </button>
               </div>
             </form>
+          </div>
+
+          {/* Subtle Low-Priority App Tutorial Row */}
+          <div className="p-4 rounded-2xl border border-slate-800/80 bg-slate-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 rounded-xl bg-slate-800/80 text-slate-400">
+                <PlayCircle className="w-4 h-4 text-slate-300" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-semibold text-slate-200 text-xs">App Tutorial</span>
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    ({MAX_REWATCH_LIMIT - rewatchCount} / {MAX_REWATCH_LIMIT} left)
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {rewatchCount >= MAX_REWATCH_LIMIT
+                    ? 'Maximum 3 re-watches reached.'
+                    : 'Re-watch the onboarding guide and practice bot swiping.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleRewatchClick}
+              disabled={rewatchCount >= MAX_REWATCH_LIMIT}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all self-start sm:self-auto flex-shrink-0 ${
+                rewatchCount >= MAX_REWATCH_LIMIT
+                  ? 'bg-slate-800/40 text-slate-600 cursor-not-allowed border border-slate-800/60'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 shadow-sm'
+              }`}
+            >
+              {rewatchCount >= MAX_REWATCH_LIMIT ? 'Limit Reached' : 'Re-watch'}
+            </button>
           </div>
 
           {/* Delete Account Card */}

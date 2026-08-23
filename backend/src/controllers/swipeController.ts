@@ -21,10 +21,12 @@ export class SwipeController {
 
   static async swipe(req: AuthenticatedRequest, res: Response) {
     const userId = req.userId!;
-    const { swipedId, type } = req.body; // type: "LIKE" or "PASS"
+    let { swipedId, type } = req.body; // type: "LIKE", "PASS", or "SUPER_LIKE"
 
-    if (!swipedId || !type || !['LIKE', 'PASS'].includes(type)) {
-      return res.status(400).json({ error: 'Valid swipedId and type (LIKE/PASS) are required' });
+    if (type === 'SUPER') type = 'SUPER_LIKE';
+
+    if (!swipedId || !type || !['LIKE', 'PASS', 'SUPER_LIKE'].includes(type)) {
+      return res.status(400).json({ error: 'Valid swipedId and type (LIKE/PASS/SUPER_LIKE) are required' });
     }
 
     if (userId === swipedId) {
@@ -40,6 +42,26 @@ export class SwipeController {
 
       if (!targetUser || !targetUser.profile) {
         return res.status(404).json({ error: 'Target user profile not found' });
+      }
+
+      // 1b. If Super Like, verify 1 daily limit (resets daily at midnight)
+      if (type === 'SUPER_LIKE') {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const superLikesToday = await prisma.swipe.count({
+          where: {
+            swiperId: userId,
+            type: 'SUPER_LIKE',
+            createdAt: { gte: startOfDay },
+          },
+        });
+
+        if (superLikesToday >= 1) {
+          return res.status(400).json({ 
+            error: 'You have used your 1 free daily Super Like. Log in tomorrow to claim another free Super Like!' 
+          });
+        }
       }
 
       // 2. Record the swipe
@@ -61,8 +83,8 @@ export class SwipeController {
         },
       });
 
-      // 3. Check for mutual match if the swipe is a LIKE
-      if (type === 'LIKE') {
+      // 3. Check for mutual match if the swipe is a LIKE or SUPER_LIKE
+      if (type === 'LIKE' || type === 'SUPER_LIKE') {
         let isMatch = false;
 
         const mutualSwipe = await prisma.swipe.findUnique({
@@ -74,7 +96,7 @@ export class SwipeController {
           },
         });
 
-        if (mutualSwipe && mutualSwipe.type === 'LIKE') {
+        if (mutualSwipe && (mutualSwipe.type === 'LIKE' || mutualSwipe.type === 'SUPER_LIKE')) {
           isMatch = true;
         } else {
           // Check if target user is a dummy profile for testing purposes
@@ -213,6 +235,32 @@ export class SwipeController {
       return res.status(200).json(matchDTOs);
     } catch (error) {
       console.error('[SwipeController.getMatches] Error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  static async getSuperLikeStatus(req: AuthenticatedRequest, res: Response) {
+    const userId = req.userId!;
+    try {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const superLikesToday = await prisma.swipe.count({
+        where: {
+          swiperId: userId,
+          type: 'SUPER_LIKE',
+          createdAt: { gte: startOfDay },
+        },
+      });
+
+      const remaining = Math.max(0, 1 - superLikesToday);
+      return res.status(200).json({
+        dailyLimit: 1,
+        remaining,
+        usedToday: superLikesToday >= 1,
+      });
+    } catch (error) {
+      console.error('[SwipeController.getSuperLikeStatus] Error:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   }

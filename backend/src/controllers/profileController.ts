@@ -206,6 +206,11 @@ export class ProfileController {
         return res.status(404).json({ error: 'Photo not found on this profile' });
       }
 
+      // Enforce at least 1 photo must remain
+      if (profile.photos.length <= 1) {
+        return res.status(400).json({ error: 'You must keep at least one profile photo' });
+      }
+
       // Delete from storage
       await storageService.deletePhoto(photo.url);
 

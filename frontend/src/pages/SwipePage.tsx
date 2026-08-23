@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import Layout from '../components/Layout';
 import ProfileCardContent from '../components/ProfileCardContent';
-import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, User as UserIcon } from 'lucide-react';
+import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, Sparkles, Flame, User as UserIcon } from 'lucide-react';
 import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from 'framer-motion';
 
 interface Candidate {
@@ -27,6 +27,7 @@ interface Candidate {
   gym?: string;
   height?: number;
   weight?: number;
+  isSuperLike?: boolean;
 }
 
 export default function SwipePage() {
@@ -38,6 +39,8 @@ export default function SwipePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [swipeResult, setSwipeResult] = useState<any>(null); // controls Mutual Match modal
+  const [superLikesRemaining, setSuperLikesRemaining] = useState<number>(1);
+  const [showSuperLikeEmptyModal, setShowSuperLikeEmptyModal] = useState(false);
 
   // Safety block/report modal states
   const [showSafetyModal, setShowSafetyModal] = useState(false);
@@ -45,8 +48,6 @@ export default function SwipePage() {
   const [reportNote, setReportNote] = useState('');
   const [safetyActionType, setSafetyActionType] = useState<'block' | 'report'>('block');
 
-  // Swipe Animation and Tutorial State
-  const [showTutorial, setShowTutorial] = useState(false);
   const x = useMotionValue(0);
   const controls = useAnimation();
   
@@ -64,26 +65,7 @@ export default function SwipePage() {
     setIsLoading(true);
     try {
       const data = await api.get<Candidate[]>('/swipes/discovery');
-      
-      const hasSeen = localStorage.getItem('heartsync_swipe_tutorial');
-      let initialCandidates = data;
-      
-      if (!hasSeen) {
-        const dummyProfile: Candidate = {
-          id: 'tutorial-profile',
-          userId: 'tutorial-user',
-          name: 'Dislike to left, Like to right',
-          birthdate: new Date(new Date().setFullYear(new Date().getFullYear() - 22)).toISOString(),
-          gender: 'Welcome',
-          bio: '👋 Welcome to HeartSync! I am a tutorial profile to help you get started.\n\nPractice your swiping on me! \n👉 Swipe RIGHT or click the Heart to LIKE.\n👈 Swipe LEFT or click the X to DISLIKE.',
-          distance: 0.1,
-          photos: [{ id: 'tutorial-pic', url: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&fit=crop&q=80', isPrimary: true }],
-          interests: ['HeartSync', 'Tutorial', 'Matches'],
-        };
-        initialCandidates = [dummyProfile, ...data];
-      }
-      
-      setCandidates(initialCandidates);
+      setCandidates(data || []);
       setCurrentIndex(0);
     } catch (error) {
       console.error('[SwipePage] Failed to fetch discovery candidates:', error);
@@ -92,32 +74,43 @@ export default function SwipePage() {
     }
   };
 
+  const fetchSuperLikeStatus = async () => {
+    try {
+      const res = await api.get<{ remaining: number; usedToday: boolean }>('/swipes/super-like-status');
+      setSuperLikesRemaining(res.remaining ?? 1);
+    } catch (err) {
+      console.error('[SwipePage] Failed to fetch super like status:', err);
+    }
+  };
+
   useEffect(() => {
+    // Check if tutorial should be shown for newly onboarded or first-time user
+    if (user && user.isOnboarded) {
+      const userTutorialKey = user.id ? `heartsync_tutorial_completed_${user.id}` : 'heartsync_tutorial_completed';
+      const isCompleted = localStorage.getItem(userTutorialKey) || localStorage.getItem('heartsync_tutorial_completed');
+
+      if (!isCompleted) {
+        navigate('/tutorial');
+        return;
+      }
+    }
+
     if (user?.isVerified) {
       fetchCandidates();
+      fetchSuperLikeStatus();
     } else {
       setIsLoading(false);
     }
-  }, [user]);
-
-  const dismissTutorial = () => {
-    setShowTutorial(false);
-    localStorage.setItem('heartsync_swipe_tutorial', 'true');
-  };
+  }, [user, navigate]);
 
 
-  const handleSwipe = async (type: 'LIKE' | 'PASS') => {
+  const handleSwipe = async (type: 'LIKE' | 'PASS' | 'SUPER_LIKE') => {
     if (candidates.length === 0 || currentIndex >= candidates.length) return;
 
     const currentCandidate = candidates[currentIndex];
     
     // Optimistically advance card
     setCurrentIndex((prev) => prev + 1);
-
-    if (currentCandidate.id === 'tutorial-profile') {
-      dismissTutorial();
-      return; // Do not send API request for tutorial profile
-    }
 
     try {
       const res = await api.post<any>('/swipes', {
@@ -139,7 +132,6 @@ export default function SwipePage() {
   };
 
   const handleDragEnd = async (_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (showTutorial) dismissTutorial();
     const swipeThreshold = 100;
     if (info.offset.x > swipeThreshold) {
       await controls.start({ x: 500, opacity: 0, transition: { duration: 0.3 } });
@@ -157,7 +149,6 @@ export default function SwipePage() {
   };
 
   const handleSwipeClick = async (type: 'LIKE' | 'PASS') => {
-    if (showTutorial) dismissTutorial();
     if (type === 'LIKE') {
       await controls.start({ x: 500, opacity: 0, transition: { duration: 0.3 } });
     } else {
@@ -166,6 +157,20 @@ export default function SwipePage() {
     handleSwipe(type);
     x.set(0);
     controls.set({ x: 0, opacity: 1 });
+  };
+
+  const handleSuperLikeClick = async () => {
+    if (superLikesRemaining <= 0) {
+      setShowSuperLikeEmptyModal(true);
+      return;
+    }
+    if (candidates.length === 0 || currentIndex >= candidates.length) return;
+
+    await controls.start({ y: -600, opacity: 0, scale: 1.05, transition: { duration: 0.35 } });
+    setSuperLikesRemaining((prev) => Math.max(0, prev - 1));
+    handleSwipe('SUPER_LIKE');
+    x.set(0);
+    controls.set({ x: 0, y: 0, opacity: 1, scale: 1 });
   };
 
   // Block & Report API handles
@@ -272,14 +277,38 @@ export default function SwipePage() {
               </motion.div>
 
               {/* Sticky Action Buttons */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent z-30 flex items-center justify-center space-x-6 pointer-events-none">
+              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent z-30 flex items-center justify-center space-x-4 sm:space-x-5 pointer-events-none">
                 {/* PASS button */}
                 <button
                   onClick={() => handleSwipeClick('PASS')}
                   className="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:border-rose-500/50 hover:shadow-[0_0_20px_rgba(244,63,94,0.2)] transition-all duration-300 transform hover:scale-105 pointer-events-auto"
+                  title="Pass (Swipe Left)"
                 >
                   <X className="w-6 h-6" />
                 </button>
+
+                {/* SUPER LIKE button */}
+                <div className="relative pointer-events-auto">
+                  <button
+                    onClick={handleSuperLikeClick}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg ${
+                      superLikesRemaining > 0
+                        ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.5)] active:scale-95'
+                        : 'bg-slate-900 border border-slate-800 text-amber-500/50 hover:text-amber-400 hover:border-amber-500/30'
+                    }`}
+                    title={superLikesRemaining > 0 ? 'Super Like (1 Daily Free)' : 'Daily Super Like Used (1/day)'}
+                  >
+                    <Star className={`w-5 h-5 ${superLikesRemaining > 0 ? 'fill-slate-950' : 'fill-none'}`} />
+                  </button>
+                  {/* Badge */}
+                  <span className={`absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full text-[9px] font-black border ${
+                    superLikesRemaining > 0
+                      ? 'bg-amber-400 text-slate-950 border-amber-300 shadow'
+                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                  }`}>
+                    {superLikesRemaining}
+                  </span>
+                </div>
 
                 {/* Safety / Block button */}
                 <button
@@ -288,6 +317,7 @@ export default function SwipePage() {
                     setShowSafetyModal(true);
                   }}
                   className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 hover:text-amber-500 hover:border-amber-500/50 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all duration-300 transform hover:scale-105 pointer-events-auto"
+                  title="Safety & Report"
                 >
                   <ShieldAlert className="w-5 h-5" />
                 </button>
@@ -296,6 +326,7 @@ export default function SwipePage() {
                 <button
                   onClick={() => handleSwipeClick('LIKE')}
                   className="w-14 h-14 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-[0_4px_15px_rgba(244,63,94,0.4)] hover:bg-rose-500 hover:shadow-[0_0_25px_rgba(244,63,94,0.6)] transition-all duration-300 transform hover:scale-105 pointer-events-auto"
+                  title="Like (Swipe Right)"
                 >
                   <Heart className="w-6 h-6 fill-white" />
                 </button>
@@ -460,6 +491,36 @@ export default function SwipePage() {
                 Keep Swiping
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Daily Super Like Modal Overlay */}
+      {showSuperLikeEmptyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
+          <div className="glass max-w-sm w-full rounded-3xl p-6 border border-amber-500/30 text-center relative shadow-2xl bg-slate-950/95">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center mx-auto mb-4 text-slate-950 shadow-lg shadow-amber-500/30 animate-bounce">
+              <Star className="w-7 h-7 fill-slate-950" />
+            </div>
+            <h3 className="text-xl font-black text-slate-100">Daily Super Like Claimed</h3>
+            <p className="text-slate-300 text-xs mt-2 leading-relaxed">
+              You get <strong className="text-amber-400">1 free Super Like every day</strong> when you log in! You've used today's free Super Like.
+            </p>
+            <div className="my-4 p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 text-left space-y-2">
+              <p className="text-[11px] text-slate-400 flex items-center">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 mr-2 flex-shrink-0" />
+                <span>Refreshes every night at 12:00 AM</span>
+              </p>
+              <p className="text-[11px] text-slate-400 flex items-center">
+                <Flame className="w-3.5 h-3.5 text-rose-500 mr-2 flex-shrink-0" />
+                <span>Log in daily to keep claiming free Super Likes</span>
+              </p>
+            </div>
+            <button
+              onClick={() => setShowSuperLikeEmptyModal(false)}
+              className="w-full py-3 rounded-xl bg-gradient text-white text-xs font-bold shadow-lg shadow-rose-500/25 hover:opacity-90 active:scale-95 transition-all"
+            >
+              Got It, Keep Swiping!
+            </button>
           </div>
         </div>
       )}
