@@ -260,7 +260,6 @@ export default function ChatPage() {
       await fetchMatches();
       
       // Update selected match local state if it didn't move tabs (meaning the other hasn't accepted yet)
-      const isUser1 = selectedMatch.otherProfile.userId !== selectedMatch.user1Id; // Wait, user1Id might not be returned in MatchDTO, let's just refresh and see if it's still in the list
       setSelectedMatch(prev => prev ? { ...prev, user1Continue: true, user2Continue: true } : null);
       
     } catch (err: any) {

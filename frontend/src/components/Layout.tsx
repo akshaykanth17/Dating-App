@@ -1,7 +1,7 @@
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Flame, MessageSquare, User, LogOut, CircleUser, Map, MapPin } from 'lucide-react';
+import { Flame, MessageSquare, User, CircleUser, Map, MapPin } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
 
 import LocationPickerModal from './LocationPickerModal';
@@ -11,8 +11,6 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const [locationName, setLocationName] = React.useState('');
