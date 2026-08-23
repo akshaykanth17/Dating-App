@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
 import { CircleUser, Trash2, Upload, RefreshCw, X, MapPin } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
+import LocationPickerModal from '../components/LocationPickerModal';
 
 const INTEREST_OPTIONS = [
   'Movies', 'Coffee', 'Hiking', 'Photography', 'Foodie', 'Travel', 
@@ -71,14 +72,19 @@ export default function ProfilePage() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [locationName, setLocationName] = useState<string>('');
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
     if (user?.profile?.latitude && user?.profile?.longitude) {
+      setLatitude(user.profile.latitude);
+      setLongitude(user.profile.longitude);
       reverseGeocode(user.profile.latitude, user.profile.longitude).then(setLocationName);
     }
-  }, [user]);
+  }, [user?.profile?.latitude, user?.profile?.longitude]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -105,6 +111,11 @@ export default function ProfilePage() {
         if (data.height) setHeight(data.height.toString());
         if (data.weight) setWeight(data.weight.toString());
         if (data.completionPercentage) setCompletionPercentage(data.completionPercentage);
+        if (data.latitude !== undefined && data.longitude !== undefined) {
+          setLatitude(data.latitude);
+          setLongitude(data.longitude);
+          reverseGeocode(data.latitude, data.longitude).then(setLocationName);
+        }
 
         updateUserProfile(data);
       } catch (err) {
@@ -136,6 +147,8 @@ export default function ProfilePage() {
         gym,
         height: height ? Number(height) : undefined,
         weight: weight ? Number(weight) : undefined,
+        latitude: latitude !== null ? latitude : undefined,
+        longitude: longitude !== null ? longitude : undefined,
       };
 
       if (birthdate) {
@@ -574,11 +587,60 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="pt-4 flex items-center justify-between border-t border-slate-800/50 mt-6">
-                  <span className="text-xs text-slate-500 flex items-center">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    {locationName || `GPS: ${user?.profile?.latitude?.toFixed(4)}, ${user?.profile?.longitude?.toFixed(4)}`}
-                  </span>
+                {/* Location Section */}
+                <div className="border-t border-slate-800/50 pt-6 mt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      Location & Discovery Area
+                    </label>
+                    <span className="text-[10px] text-rose-400 font-semibold flex items-center">
+                      <MapPin className="w-3 h-3 mr-0.5" />
+                      <span>Tap to change</span>
+                    </span>
+                  </div>
+
+                  <div
+                    onClick={() => setShowLocationModal(true)}
+                    className="w-full bg-slate-900/90 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer group shadow-md hover:shadow-rose-500/10"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 group-hover:bg-rose-500/25 group-hover:scale-105 flex items-center justify-center text-rose-500 flex-shrink-0 transition-all">
+                        <MapPin className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 text-left">
+                        <p className="text-sm font-bold text-slate-100 group-hover:text-rose-200 transition-colors truncate">
+                          {locationName || (latitude && longitude ? `${latitude.toFixed(3)}°, ${longitude.toFixed(3)}°` : 'Set your location')}
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                          {latitude && longitude ? 'Tap to search city or detect GPS location' : 'Tap to select your city or detect GPS'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowLocationModal(true);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition-colors flex-shrink-0 ml-2 shadow-sm"
+                    >
+                      Change ✎
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-6 flex items-center justify-between border-t border-slate-800/50 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowLocationModal(true)}
+                    className="text-xs text-slate-400 hover:text-rose-400 flex items-center transition-colors group cursor-pointer"
+                  >
+                    <MapPin className="w-3.5 h-3.5 mr-1 text-rose-500 group-hover:scale-110 transition-transform" />
+                    <span className="truncate max-w-[150px] sm:max-w-[220px]">
+                      {locationName || (latitude ? `${latitude.toFixed(2)}°, ${longitude?.toFixed(2)}°` : 'Set Location')}
+                    </span>
+                  </button>
                   <button
                     type="submit"
                     disabled={isSavingProfile}
@@ -592,6 +654,20 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        currentLat={latitude}
+        currentLng={longitude}
+        currentLocationName={locationName}
+        onLocationSelected={(loc) => {
+          setLatitude(loc.latitude);
+          setLongitude(loc.longitude);
+          setLocationName(loc.locationName);
+        }}
+      />
 
       {/* Preview Modal Overlay */}
       {showPreviewModal && (

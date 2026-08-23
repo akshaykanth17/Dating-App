@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
-import { Settings, Lock, ShieldAlert, PlayCircle } from 'lucide-react';
+import { Settings, Lock, ShieldAlert, PlayCircle, MapPin } from 'lucide-react';
+import { reverseGeocode } from '../utils/location';
+import LocationPickerModal from '../components/LocationPickerModal';
 
 interface ProfileData {
   id: string;
@@ -41,6 +43,8 @@ export default function SettingsPage() {
   const [ageMin, setAgeMin] = useState(18);
   const [ageMax, setAgeMax] = useState(35);
   const [distance, setDistance] = useState(50);
+  const [locationName, setLocationName] = useState('');
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   // Password fields
   const [currentPassword, setCurrentPassword] = useState('');
@@ -59,6 +63,12 @@ export default function SettingsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (user?.profile?.latitude && user?.profile?.longitude) {
+      reverseGeocode(user.profile.latitude, user.profile.longitude).then(setLocationName);
+    }
+  }, [user?.profile?.latitude, user?.profile?.longitude]);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -192,6 +202,33 @@ export default function SettingsPage() {
                     onChange={(e) => setAgeMax(Number(e.target.value))}
                     className="w-20 bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-2.5 py-1.5 text-center text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
+                </div>
+              </div>
+
+              {/* Your Location */}
+              <div className="pt-2">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                  <span>Your Current Location</span>
+                  <span className="text-[10px] text-rose-400 font-semibold">Tappable</span>
+                </label>
+                <div
+                  onClick={() => setShowLocationModal(true)}
+                  className="w-full bg-slate-900/90 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-2xl p-3.5 flex items-center justify-between transition-all cursor-pointer group shadow-sm hover:shadow-rose-500/10"
+                >
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 group-hover:bg-rose-500/25 flex items-center justify-center text-rose-500 flex-shrink-0 transition-colors">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-slate-100 group-hover:text-rose-200 transition-colors truncate">
+                        {locationName || 'Set your location'}
+                      </p>
+                      <p className="text-[11px] text-slate-400">Tap to change city or detect GPS</p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition-colors flex-shrink-0 ml-2">
+                    Change ✎
+                  </span>
                 </div>
               </div>
 
@@ -357,6 +394,17 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+      {/* Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        currentLat={user?.profile?.latitude}
+        currentLng={user?.profile?.longitude}
+        currentLocationName={locationName}
+        onLocationSelected={(loc) => {
+          setLocationName(loc.locationName);
+        }}
+      />
     </Layout>
   );
 }

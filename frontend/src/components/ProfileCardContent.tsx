@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserIcon, Star } from 'lucide-react';
+import { UserIcon, Star, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -174,9 +174,20 @@ export default function ProfileCardContent({ candidate, isTop, likeOpacity, pass
             </span>
           )}
           {candidate.favoriteSpot && (
-            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-              📍 <span>Fav spot: {candidate.favoriteSpot}</span>
-            </span>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(candidate.favoriteSpot)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              className="px-3 py-1 rounded-full border border-slate-700 hover:border-rose-500/60 bg-slate-900/70 hover:bg-slate-900 text-rose-400 text-xs font-medium flex items-center space-x-1 transition-all cursor-pointer group shadow-sm"
+              title="Open favorite spot in Google Maps"
+            >
+              <MapPin className="w-3 h-3 text-rose-500 flex-shrink-0" />
+              <span className="group-hover:text-rose-300">Fav spot: {candidate.favoriteSpot}</span>
+              <span className="text-[10px] text-rose-400/80 group-hover:underline ml-0.5">↗</span>
+            </a>
           )}
         </div>
       </div>

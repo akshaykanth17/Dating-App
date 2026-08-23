@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { Flame, MessageSquare, User, LogOut, CircleUser, Map, MapPin } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
 
+import LocationPickerModal from './LocationPickerModal';
+
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -14,12 +16,13 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const { user } = useAuth();
   const [locationName, setLocationName] = React.useState('');
+  const [showLocationModal, setShowLocationModal] = React.useState(false);
 
   React.useEffect(() => {
     if (user?.profile?.latitude && user?.profile?.longitude) {
       reverseGeocode(user.profile.latitude, user.profile.longitude).then(setLocationName);
     }
-  }, [user]);
+  }, [user?.profile?.latitude, user?.profile?.longitude]);
 
   const handleLogout = () => {
     logout();
@@ -36,6 +39,18 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
+      {/* Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        currentLat={user?.profile?.latitude}
+        currentLng={user?.profile?.longitude}
+        currentLocationName={locationName}
+        onLocationSelected={(loc) => {
+          setLocationName(loc.locationName);
+        }}
+      />
+
       {/* Premium Top Navigation Bar */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -43,12 +58,16 @@ export default function Layout({ children }: LayoutProps) {
             <Flame className="w-8 h-8 text-rose-500 fill-rose-500 animate-pulse" />
             <div className="flex flex-col">
               <span className="text-xl font-bold tracking-tight text-gradient bg-clip-text leading-none">HeartSync</span>
-              {locationName && (
-                <span className="text-[10px] text-slate-400 font-medium flex items-center mt-0.5">
-                  <MapPin className="w-3 h-3 mr-0.5 text-rose-500" />
-                  {locationName}
-                </span>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowLocationModal(true)}
+                className="text-[10px] text-slate-400 hover:text-rose-400 font-medium flex items-center mt-0.5 group transition-colors cursor-pointer text-left"
+                title="Tap to change location"
+              >
+                <MapPin className="w-3 h-3 mr-0.5 text-rose-500 group-hover:scale-110 transition-transform" />
+                <span className="truncate max-w-[130px] sm:max-w-[180px]">{locationName || 'Set Location'}</span>
+                <span className="text-[9px] text-rose-400/80 ml-1 group-hover:underline">✎</span>
+              </button>
             </div>
           </div>
 

@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { Camera, ChevronRight, ChevronLeft, MapPin, Heart, User, Calendar, Check, Loader2, AlertCircle, X } from 'lucide-react';
+import { Camera, ChevronRight, ChevronLeft, MapPin, Heart, User, Calendar, Check, Loader2, AlertCircle, X, Search, Globe } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
+import LocationPickerModal, { POPULAR_CITIES } from '../components/LocationPickerModal';
 
 const STEPS = ['About You', 'Location', 'Preferences', 'Details', 'Your Photo'];
 
@@ -48,6 +49,7 @@ export default function OnboardingPage() {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationStatus, setLocationStatus] = useState('');
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   // Step 3 — Preferences
   const [gendersInterestedIn, setGendersInterestedIn] = useState<string[]>([]);
@@ -411,38 +413,107 @@ export default function OnboardingPage() {
           {/* ── STEP 1: Location ── */}
           {step === 1 && (
             <div className="space-y-4">
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center space-x-2 mb-2">
                 <MapPin className="w-5 h-5 text-rose-500" />
                 <h2 className="text-xl font-bold text-white">Your Location</h2>
               </div>
-              <p className="text-slate-400 text-sm">We use your location to show you people nearby.</p>
+              <p className="text-slate-400 text-sm">We use your location to show you people and hangouts nearby.</p>
 
-              <div className={`rounded-2xl border p-5 text-center transition-all ${latitude ? 'border-emerald-700 bg-emerald-950/20' : 'border-slate-700 bg-slate-900/50'}`}>
+              {/* Tappable Selected Location Box */}
+              <div
+                onClick={() => setShowLocationModal(true)}
+                className={`rounded-2xl border p-4 text-left transition-all cursor-pointer group shadow-md ${
+                  latitude
+                    ? 'border-emerald-500/50 bg-emerald-950/20 hover:border-emerald-500'
+                    : 'border-slate-700 bg-slate-900/60 hover:border-rose-500/60'
+                }`}
+              >
                 {locationLoading ? (
-                  <div className="flex flex-col items-center space-y-3">
-                    <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
-                    <p className="text-slate-400 text-sm">Detecting location...</p>
+                  <div className="flex items-center space-x-3 py-2 justify-center">
+                    <Loader2 className="w-6 h-6 text-rose-500 animate-spin" />
+                    <p className="text-slate-300 text-sm font-medium">Detecting location...</p>
                   </div>
                 ) : latitude ? (
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                      <Check className="w-6 h-6 text-emerald-400" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <div className="w-9 h-9 bg-emerald-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Check className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Current Location</p>
+                        <p className="text-sm font-bold text-slate-100 truncate">{locationStatus || 'Location Selected'}</p>
+                      </div>
                     </div>
-                    <p className="text-emerald-400 font-semibold text-sm">{locationStatus}</p>
+                    <span className="text-xs text-rose-400 font-bold group-hover:underline flex-shrink-0 ml-2">Change ✎</span>
                   </div>
                 ) : (
-                  <p className="text-slate-400 text-sm">{locationStatus}</p>
+                  <div className="flex items-center justify-between py-1">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-9 h-9 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-rose-400 transition-colors">
+                        <MapPin className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-200">No Location Selected</p>
+                        <p className="text-xs text-slate-400">Tap to search city or use GPS</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-rose-400 font-bold group-hover:underline">Select →</span>
+                  </div>
                 )}
               </div>
 
-              <button
-                onClick={detectLocation}
-                disabled={locationLoading}
-                className="w-full py-3 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800 transition-colors flex items-center justify-center space-x-2"
-              >
-                <MapPin className="w-4 h-4" />
-                <span>{latitude ? 'Re-detect Location' : 'Detect My Location'}</span>
-              </button>
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={detectLocation}
+                  disabled={locationLoading}
+                  className="py-2.5 px-3 rounded-xl border border-slate-700 bg-slate-900/80 text-slate-300 text-xs font-semibold hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-center space-x-1.5"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Auto GPS</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowLocationModal(true)}
+                  className="py-2.5 px-3 rounded-xl border border-slate-700 bg-slate-900/80 text-slate-300 text-xs font-semibold hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-center space-x-1.5"
+                >
+                  <Search className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Search City</span>
+                </button>
+              </div>
+
+              {/* Popular Quick Picks */}
+              <div className="pt-2">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                  <span>Quick Pick Popular Cities</span>
+                  <Globe className="w-3 h-3 text-slate-500" />
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {POPULAR_CITIES.slice(0, 8).map((city, idx) => {
+                    const isSelected = latitude && Math.abs(latitude - city.lat) < 0.05;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setLatitude(city.lat);
+                          setLongitude(city.lng);
+                          setLocationStatus(`${city.name}, ${city.state}`);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border flex items-center space-x-1 ${
+                          isSelected
+                            ? 'bg-rose-600 border-rose-500 text-white shadow-md'
+                            : 'bg-slate-900/70 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        <MapPin className={`w-3 h-3 ${isSelected ? 'text-white' : 'text-rose-400'}`} />
+                        <span>{city.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 
@@ -742,6 +813,20 @@ export default function OnboardingPage() {
           </div>
         </div>
       </div>
+
+      {/* Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        currentLat={latitude}
+        currentLng={longitude}
+        currentLocationName={locationStatus}
+        onLocationSelected={(loc) => {
+          setLatitude(loc.latitude);
+          setLongitude(loc.longitude);
+          setLocationStatus(loc.locationName);
+        }}
+      />
     </div>
   );
 }
