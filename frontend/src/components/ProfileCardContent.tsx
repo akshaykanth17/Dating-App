@@ -1,8 +1,7 @@
 import React from 'react';
 import { UserIcon, Star, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { getPhotoUrl, handleImageError } from '../utils/photoUrl';
 
 const getAge = (birthdate: string) => {
   if (!birthdate) return '';
@@ -73,12 +72,9 @@ export default function ProfileCardContent({ candidate, isTop, likeOpacity, pass
         )}
         {primaryPhoto ? (
           <img
-            src={
-              primaryPhoto.url.startsWith('/uploads')
-                ? `${API_URL.replace('/api', '')}${primaryPhoto.url}`
-                : primaryPhoto.url
-            }
+            src={getPhotoUrl(primaryPhoto.url)}
             alt={candidate.name}
+            onError={handleImageError}
             className="w-full h-full object-cover select-none pointer-events-none"
           />
         ) : (
@@ -207,12 +203,9 @@ export default function ProfileCardContent({ candidate, isTop, likeOpacity, pass
             {otherPhotos[i] && (
               <div className="w-full rounded-2xl overflow-hidden shadow-lg aspect-[3/4]">
                 <img
-                  src={
-                    otherPhotos[i].url.startsWith('/uploads')
-                      ? `${API_URL.replace('/api', '')}${otherPhotos[i].url}`
-                      : otherPhotos[i].url
-                  }
+                  src={getPhotoUrl(otherPhotos[i].url)}
                   alt={`${candidate.name} detail`}
+                  onError={handleImageError}
                   className="w-full h-full object-cover select-none pointer-events-none"
                 />
               </div>

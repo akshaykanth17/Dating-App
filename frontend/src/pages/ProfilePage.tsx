@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
 import { CircleUser, Trash2, Upload, RefreshCw, X, MapPin } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
+import { getPhotoUrl, handleImageError } from '../utils/photoUrl';
 import LocationPickerModal from '../components/LocationPickerModal';
 
 const INTEREST_OPTIONS = [
@@ -75,8 +76,6 @@ export default function ProfilePage() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
-
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
     if (user?.profile?.latitude && user?.profile?.longitude) {
@@ -260,10 +259,6 @@ export default function ProfilePage() {
     }
   };
 
-  const getPhotoUrl = (url: string) => {
-    return url.startsWith('/uploads') ? `${API_URL.replace('/api', '')}${url}` : url;
-  };
-
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const getAge = (birthdateString: string): number => {
@@ -323,7 +318,12 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-3 flex-1 mb-4">
               {photos.map((p) => (
                 <div key={p.id} className="relative group aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
-                  <img src={getPhotoUrl(p.url)} alt="Profile" className="w-full h-full object-cover" />
+                  <img
+                    src={getPhotoUrl(p.url)}
+                    alt="Profile"
+                    onError={handleImageError}
+                    className="w-full h-full object-cover"
+                  />
                   
                   {p.isPrimary && (
                     <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-rose-600 text-[10px] font-bold text-white z-10">
@@ -697,6 +697,7 @@ export default function ProfilePage() {
                   <img
                     src={getPhotoUrl(primaryPreviewPhoto?.url)}
                     alt={name}
+                    onError={handleImageError}
                     className="w-full h-full object-cover select-none pointer-events-none"
                   />
                 ) : (
@@ -778,6 +779,7 @@ export default function ProfilePage() {
                         <img
                           src={getPhotoUrl(otherPreviewPhotos[i].url)}
                           alt={`${name} detail`}
+                          onError={handleImageError}
                           className="w-full h-full object-cover select-none pointer-events-none"
                         />
                       </div>

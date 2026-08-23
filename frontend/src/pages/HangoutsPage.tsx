@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import ProfileCardContent from '../components/ProfileCardContent';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getPhotoUrl, handleImageError } from '../utils/photoUrl';
 
 interface Photo {
   id: string;
@@ -109,8 +110,6 @@ export default function HangoutsPage() {
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef<number | null>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
   const fetchHangouts = async () => {
     setLoading(true);
     try {
@@ -154,13 +153,8 @@ export default function HangoutsPage() {
     localStorage.setItem(userKey, 'true');
   };
 
-  const getPhotoUrl = (url: string) => {
-    if (!url) return '';
-    return url.startsWith('/uploads') ? `${API_URL.replace('/api', '')}${url}` : url;
-  };
-
   const primaryPhoto = (creator: Creator) => {
-    const primary = creator.photos.find(p => p.isPrimary) || creator.photos[0];
+    const primary = creator.photos?.find(p => p.isPrimary) || creator.photos?.[0];
     return primary ? getPhotoUrl(primary.url) : null;
   };
 
@@ -441,7 +435,12 @@ export default function HangoutsPage() {
                   >
                     <div className="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 border-2 border-rose-500/60 shadow-lg">
                       {primaryPhoto(currentHangout.creator) ? (
-                        <img src={primaryPhoto(currentHangout.creator)!} className="w-full h-full object-cover" alt="" />
+                        <img
+                          src={primaryPhoto(currentHangout.creator)!}
+                          className="w-full h-full object-cover"
+                          alt=""
+                          onError={handleImageError}
+                        />
                       ) : (
                         <div className="w-full h-full bg-slate-800 flex items-center justify-center">
                           <UserIcon className="w-6 h-6 text-slate-500" />
@@ -593,6 +592,7 @@ export default function HangoutsPage() {
                         <img
                           src={primaryPhoto(viewingHangoutDetail.creator)!}
                           alt={viewingHangoutDetail.creator.name}
+                          onError={handleImageError}
                           className="w-full h-full object-cover"
                         />
                       ) : (
