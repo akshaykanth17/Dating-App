@@ -264,4 +264,40 @@ export class SwipeController {
       return res.status(500).json({ error: 'Internal server error' });
     }
   }
+
+  static async resetSwipes(req: AuthenticatedRequest, res: Response) {
+    const userId = req.userId!;
+    try {
+      await prisma.swipe.deleteMany({
+        where: { swiperId: userId }
+      });
+      return res.status(200).json({ success: true, message: 'Swipes reset successfully' });
+    } catch (error) {
+      console.error('[SwipeController.resetSwipes] Error:', error);
+      return res.status(500).json({ error: 'Failed to reset swipes' });
+    }
+  }
+
+  static async undoSwipe(req: AuthenticatedRequest, res: Response) {
+    const userId = req.userId!;
+    try {
+      const lastSwipe = await prisma.swipe.findFirst({
+        where: { swiperId: userId },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (!lastSwipe) {
+        return res.status(404).json({ error: 'No previous swipe found to undo' });
+      }
+
+      await prisma.swipe.delete({
+        where: { id: lastSwipe.id }
+      });
+
+      return res.status(200).json({ success: true, undoneSwipedId: lastSwipe.swipedId });
+    } catch (error) {
+      console.error('[SwipeController.undoSwipe] Error:', error);
+      return res.status(500).json({ error: 'Failed to undo swipe' });
+    }
+  }
 }

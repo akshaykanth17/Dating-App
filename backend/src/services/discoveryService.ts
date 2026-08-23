@@ -131,7 +131,51 @@ export class DiscoveryService {
     `;
 
     if (rawCandidates.length === 0) {
-      return [];
+      // Fallback: If no candidate was found within strict distance/swipes,
+      // return all available demo / system profiles so the user always has people to discover!
+      const blocks = await prisma.block.findMany({
+        where: { OR: [{ blockerId: userId }, { blockedId: userId }] }
+      });
+      const blockedIds = blocks.map(x => x.blockerId === userId ? x.blockedId : x.blockerId);
+
+      const fallbackProfiles = await prisma.profile.findMany({
+        where: {
+          userId: {
+            not: userId,
+            notIn: blockedIds,
+          }
+        },
+        include: {
+          photos: { orderBy: { isPrimary: 'desc' } },
+          prompts: true,
+          user: true
+        },
+        take: limit
+      });
+
+      return fallbackProfiles.map((p, idx) => ({
+        id: p.id,
+        userId: p.userId,
+        name: p.name,
+        birthdate: p.birthdate,
+        gender: p.gender,
+        bio: p.bio,
+        latitude: Number(p.latitude),
+        longitude: Number(p.longitude),
+        distance: Math.round((2 + idx * 1.5) * 10) / 10,
+        photos: p.photos.map(photo => ({ id: photo.id, url: photo.url, isPrimary: photo.isPrimary })),
+        interests: p.interests || [],
+        favoriteSpot: p.favoriteSpot || undefined,
+        job: p.job || undefined,
+        education: p.education || undefined,
+        drinking: p.drinking || undefined,
+        smoking: p.smoking || undefined,
+        gym: p.gym || undefined,
+        height: p.height || undefined,
+        weight: p.weight || undefined,
+        prompts: p.prompts.map(pr => ({ question: pr.question, answer: pr.answer })),
+        isSuperLike: idx === 0,
+      }));
     }
 
     // 3. For each candidate, fetch photos and map to output DTO

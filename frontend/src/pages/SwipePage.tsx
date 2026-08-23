@@ -74,6 +74,18 @@ export default function SwipePage() {
     }
   };
 
+  const handleResetAndReload = async () => {
+    setIsLoading(true);
+    try {
+      await api.post('/swipes/reset', {});
+      await api.get('/seed?secret=heartsync-seed-2026').catch(() => {});
+      await fetchCandidates();
+    } catch (err) {
+      console.error('[SwipePage] Failed to reset:', err);
+      fetchCandidates();
+    }
+  };
+
   const fetchSuperLikeStatus = async () => {
     try {
       const res = await api.get<{ remaining: number; usedToday: boolean }>('/swipes/super-like-status');
@@ -222,19 +234,28 @@ export default function SwipePage() {
               <p className="text-slate-400 font-medium">Finding profile matches nearby...</p>
             </div>
           ) : candidates.length === 0 || currentIndex >= candidates.length ? (
-            <div className="text-center py-16 px-6 glass rounded-2xl max-w-md w-full">
-              <Star className="w-16 h-16 text-rose-500/30 mx-auto mb-4" />
+            <div className="text-center py-16 px-6 glass rounded-3xl max-w-md w-full border border-slate-800">
+              <Star className="w-16 h-16 text-rose-500/40 mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-slate-100">You've seen everyone!</h3>
-              <p className="text-slate-400 mt-2 text-sm leading-relaxed">
-                There are no more active candidates in your area. Try adjusting your age or distance parameters in settings.
+              <p className="text-slate-400 mt-2 text-sm leading-relaxed max-w-xs mx-auto">
+                No more active cards in your area. You can reset your swipe history to review demo profiles again anytime!
               </p>
-              <button
-                onClick={fetchCandidates}
-                className="mt-6 flex items-center justify-center space-x-2 mx-auto px-6 py-2.5 rounded-full bg-slate-800 hover:bg-slate-700 text-sm font-semibold transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span>Reload feed</span>
-              </button>
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  onClick={handleResetAndReload}
+                  className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-2.5 rounded-full bg-gradient text-white text-sm font-bold shadow-lg shadow-rose-500/25 hover:opacity-95 transition-all"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Reload Demo Profiles</span>
+                </button>
+                <button
+                  onClick={fetchCandidates}
+                  className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-sm font-semibold transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Refresh</span>
+                </button>
+              </div>
             </div>
           ) : (
             /* Scrollable Profile Card Stack */

@@ -12,6 +12,8 @@ router.use(authMiddleware);
 
 router.get('/discovery', SwipeController.getDiscoveryFeed);
 router.get('/super-like-status', SwipeController.getSuperLikeStatus);
+router.post('/reset', SwipeController.resetSwipes);
+router.post('/undo', SwipeController.undoSwipe);
 router.post('/', swipeLimiter, SwipeController.swipe);
 router.get('/matches', SwipeController.getMatches);
 

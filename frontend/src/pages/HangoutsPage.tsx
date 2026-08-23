@@ -117,10 +117,22 @@ export default function HangoutsPage() {
       const unseen = data.filter((h) => !swiped.has(h.id));
       setHangouts(unseen);
       setCurrentIndex(0);
+      setError('');
     } catch (err: any) {
       setError(err.message || 'Failed to load hangouts');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetAndReloadHangouts = async () => {
+    localStorage.removeItem(SWIPED_KEY);
+    setLoading(true);
+    try {
+      await api.get('/seed?secret=heartsync-seed-2026').catch(() => {});
+      await fetchHangouts();
+    } catch {
+      fetchHangouts();
     }
   };
 
@@ -288,21 +300,28 @@ export default function HangoutsPage() {
             </button>
           </div>
         ) : isDone ? (
-          <div className="text-center py-20 glass rounded-3xl border border-slate-800 w-full px-6">
-            <Calendar className="w-16 h-16 text-slate-700 mx-auto mb-4" />
+          <div className="text-center py-16 glass rounded-3xl border border-slate-800 w-full px-6">
+            <Calendar className="w-16 h-16 text-rose-500/40 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-slate-200">No more hangouts!</h3>
-            <p className="text-slate-500 mt-2 text-sm">
-              {hangouts.length === 0
-                ? "Be the first to post an event!"
-                : "You've seen all current events."}
+            <p className="text-slate-400 mt-2 text-sm max-w-xs mx-auto">
+              You've explored all current events. Post your own hangout or reload active demo meetups!
             </p>
-            <button
-              onClick={fetchHangouts}
-              className="mt-5 flex items-center space-x-2 mx-auto px-5 py-2 rounded-full bg-slate-800 hover:bg-slate-700 text-sm font-semibold transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>Refresh</span>
-            </button>
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={() => setShowModal(true)}
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-2.5 rounded-full bg-gradient text-white text-sm font-bold shadow-lg shadow-rose-500/25 hover:opacity-95 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Post a Hangout</span>
+              </button>
+              <button
+                onClick={handleResetAndReloadHangouts}
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-sm font-semibold transition-colors"
+              >
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Reload Demo Hangouts</span>
+              </button>
+            </div>
           </div>
         ) : (
           <>

@@ -26,6 +26,7 @@ import seedRoutes from './routes/seedRoutes';
 // Import Services & Queue Workers
 import { getQueueService } from './services/queueService';
 import { emailService } from './services/emailService';
+import { seedDummyDataIfEmpty } from './services/seedService';
 
 const app = express();
 const server = http.createServer(app);
@@ -246,6 +247,7 @@ queueService.registerWorker('email', async (jobData) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`[Server] HeartSync API listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);
+  await seedDummyDataIfEmpty(prisma);
 });
