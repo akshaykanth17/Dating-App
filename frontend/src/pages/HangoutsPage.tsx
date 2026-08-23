@@ -710,7 +710,7 @@ export default function HangoutsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
           <div className="max-w-sm w-full text-center">
             <div className="text-5xl mb-3">🎉</div>
-            <h1 className="text-4xl font-black text-gradient bg-clip-text">It's a Match!</h1>
+            <h1 className="text-4xl font-black text-gradient bg-clip-text">Let's Connect!</h1>
             <p className="text-slate-300 text-sm mt-3 leading-relaxed">
               You and <strong className="text-white">{matchResult.creatorName}</strong> are connected.<br />
               You can now coordinate joining <em>"{matchResult.hangoutTitle}"</em> in chat.
