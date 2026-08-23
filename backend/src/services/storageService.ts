@@ -25,25 +25,36 @@ export class LocalStorageService implements IStorageService {
     const destinationPath = path.join(path.resolve(this.uploadDir), filename);
 
     // Resize to max width/height of 800px, convert to webp format, and strip metadata (EXIF/location data)
-    await sharp(file.buffer)
+    const webpBuffer = await sharp(file.buffer)
       .resize(800, 800, {
         fit: 'inside',
         withoutEnlargement: true,
       })
       .toFormat('webp', { quality: 80 })
-      .toFile(destinationPath);
+      .toBuffer();
 
-    // Return the relative URL path to be stored in the DB
-    return `/uploads/${filename}`;
+    // Also attempt writing to local directory if filesystem is accessible
+    try {
+      await fs.promises.writeFile(destinationPath, webpBuffer);
+    } catch {
+      // Ignored if ephemeral or read-only filesystem
+    }
+
+    // Return data URL so images are 100% resilient across ephemeral hosting restarts and redeployments
+    return `data:image/webp;base64,${webpBuffer.toString('base64')}`;
   }
 
   async deletePhoto(fileUrl: string): Promise<void> {
-    // Extract filename from URL (e.g. /uploads/uuid.webp)
-    const filename = path.basename(fileUrl);
-    const filePath = path.join(path.resolve(this.uploadDir), filename);
+    if (!fileUrl || fileUrl.startsWith('data:')) return;
+    try {
+      const filename = path.basename(fileUrl);
+      const filePath = path.join(path.resolve(this.uploadDir), filename);
 
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch {
+      // Ignore cleanup error on deleted files
     }
   }
 }

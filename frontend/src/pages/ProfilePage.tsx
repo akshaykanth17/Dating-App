@@ -333,6 +333,20 @@ export default function ProfilePage() {
 
                   {/* Actions overlay */}
                   <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2 z-10">
+                    <label
+                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white cursor-pointer transition-colors"
+                      title="Upload / Replace Photo"
+                    >
+                      <Upload className="w-4 h-4" />
+                      <input
+                        type="file"
+                        accept="image/*,.heic,.heif"
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                        disabled={isUploadingPhoto}
+                      />
+                    </label>
+
                     {!p.isPrimary && (
                       <button
                         type="button"
