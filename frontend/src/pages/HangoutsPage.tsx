@@ -85,6 +85,9 @@ export default function HangoutsPage() {
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   const [selectedHangout, setSelectedHangout] = useState<Hangout | null>(null);
 
+  // Full Hangout Detail Modal state
+  const [viewingHangoutDetail, setViewingHangoutDetail] = useState<Hangout | null>(null);
+
   // Create Modal state
   const [showModal, setShowModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -392,21 +395,38 @@ export default function HangoutsPage() {
                   PASS
                 </div>
 
-                {/* Event Banner */}
-                <div className="absolute top-5 left-0 right-0 flex justify-center z-10 pointer-events-none">
-                  <div className="bg-slate-950/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl px-4 py-2 max-w-[85%]">
-                    <p className="text-white font-bold text-sm text-center leading-snug">{currentHangout.title}</p>
-                    <div className="flex items-center justify-center space-x-3 mt-1">
+                {/* Event Banner (Tappable toaster to view full hangout details) */}
+                <div className="absolute top-5 left-0 right-0 flex justify-center z-20 pointer-events-auto">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewingHangoutDetail(currentHangout);
+                    }}
+                    className="bg-slate-950/85 hover:bg-slate-900/95 active:scale-95 backdrop-blur-md border border-slate-700/60 hover:border-rose-500/60 rounded-2xl px-4 py-2.5 max-w-[88%] text-left shadow-xl hover:shadow-rose-500/15 transition-all group cursor-pointer"
+                    title="Tap to view full hangout details"
+                  >
+                    <div className="flex items-center justify-between space-x-2">
+                      <p className="text-white font-bold text-sm leading-snug line-clamp-1 group-hover:text-rose-300 transition-colors">
+                        {currentHangout.title}
+                      </p>
+                      <span className="flex-shrink-0 text-[10px] text-rose-400 bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.5 rounded-full font-bold group-hover:bg-rose-500/25 transition-colors">
+                        Details →
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3 mt-1.5">
                       <span className="flex items-center space-x-1 text-[10px] text-rose-400">
-                        <MapPin className="w-3 h-3" />
-                        <span className="truncate max-w-[120px]">{currentHangout.location}</span>
+                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate max-w-[110px]">{currentHangout.location}</span>
                       </span>
                       <span className="flex items-center space-x-1 text-[10px] text-emerald-400">
-                        <Clock className="w-3 h-3" />
+                        <Clock className="w-3 h-3 flex-shrink-0" />
                         <span>{formatEventDate(currentHangout.eventDate)}</span>
                       </span>
                     </div>
-                  </div>
+                  </button>
                 </div>
 
                 {/* Profile Info at Bottom */}
@@ -471,6 +491,174 @@ export default function HangoutsPage() {
           </>
         )}
       </div>
+
+      {/* Full Hangout Details Modal / Sheet */}
+      <AnimatePresence>
+        {viewingHangoutDetail && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-md"
+            onClick={() => setViewingHangoutDetail(null)}
+          >
+            <motion.div
+              initial={{ y: 50, scale: 0.96 }}
+              animate={{ y: 0, scale: 1 }}
+              exit={{ y: 50, scale: 0.96 }}
+              className="glass w-full max-w-lg rounded-t-3xl sm:rounded-3xl border border-slate-800 bg-slate-950/95 overflow-hidden shadow-2xl max-h-[88vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/70 sticky top-0 z-10 backdrop-blur-md">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-slate-100 leading-snug">Hangout Details</h2>
+                    <p className="text-[11px] text-slate-400">Real-world meetup event</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewingHangoutDetail(null)}
+                  className="p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Scrollable Body */}
+              <div className="p-6 overflow-y-auto space-y-4">
+                {/* Event Title Banner */}
+                <div className="bg-gradient-to-r from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/30 rounded-2xl p-4 shadow-inner">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+                    Activity & Meetup
+                  </span>
+                  <h3 className="text-xl font-black text-white mt-2 leading-snug">
+                    {viewingHangoutDetail.title}
+                  </h3>
+                </div>
+
+                {/* Date & Location Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* When */}
+                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-3.5 flex items-start space-x-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Date & Time</p>
+                      <p className="text-sm font-semibold text-slate-100 mt-0.5">
+                        {formatEventDate(viewingHangoutDetail.eventDate)}
+                      </p>
+                      <p className="text-[11px] text-emerald-400/90 mt-0.5">
+                        {new Date(viewingHangoutDetail.eventDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Where */}
+                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-3.5 flex items-start space-x-3">
+                    <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 flex-shrink-0 mt-0.5">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Location</p>
+                      <p className="text-sm font-semibold text-slate-100 mt-0.5 leading-snug">
+                        {viewingHangoutDetail.location}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Host Section */}
+                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Hosted By</p>
+                  <div className="flex items-center space-x-3.5">
+                    <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-rose-500/50 flex-shrink-0 shadow-md">
+                      {primaryPhoto(viewingHangoutDetail.creator) ? (
+                        <img
+                          src={primaryPhoto(viewingHangoutDetail.creator)!}
+                          alt={viewingHangoutDetail.creator.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                          <UserIcon className="w-6 h-6 text-slate-500" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <h4 className="text-base font-bold text-white truncate">
+                          {viewingHangoutDetail.creator.name}
+                        </h4>
+                        {viewingHangoutDetail.creator.birthdate && (
+                          <span className="text-xs text-slate-400 font-medium">
+                            {calculateAge(viewingHangoutDetail.creator.birthdate)} yrs
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">
+                        {viewingHangoutDetail.creator.bio || 'Looking forward to meeting someone new!'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* View Full Profile CTA */}
+                  <button
+                    onClick={() => {
+                      setSelectedCreator(viewingHangoutDetail.creator);
+                      setSelectedHangout(viewingHangoutDetail);
+                      setViewingHangoutDetail(null);
+                    }}
+                    className="mt-3.5 w-full py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 text-xs font-bold text-rose-400 hover:text-rose-300 transition-all flex items-center justify-center space-x-1.5"
+                  >
+                    <UserIcon className="w-3.5 h-3.5" />
+                    <span>View {viewingHangoutDetail.creator.name}'s Full Profile & Photos →</span>
+                  </button>
+                </div>
+
+                {/* About & Coordination Note */}
+                <div className="bg-teal-950/20 border border-teal-500/30 rounded-2xl p-4 flex items-start space-x-3">
+                  <Sparkles className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h5 className="text-xs font-bold text-teal-300 uppercase tracking-wider">How Joining Works</h5>
+                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                      Liking this event sends an instant connection to <strong>{viewingHangoutDetail.creator.name}</strong>. Once connected, a dedicated chat is unlocked so you can coordinate plans!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Action Footer */}
+              <div className="p-4 border-t border-slate-800 bg-slate-900/70 flex items-center space-x-3">
+                <button
+                  onClick={() => {
+                    setViewingHangoutDetail(null);
+                    handlePass();
+                  }}
+                  className="flex-1 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white text-xs font-bold transition-colors flex items-center justify-center space-x-1.5"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Pass</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setViewingHangoutDetail(null);
+                    await handleLike();
+                  }}
+                  className="flex-1 py-3 rounded-2xl bg-gradient text-white text-xs font-bold shadow-lg shadow-rose-500/30 hover:opacity-95 transition-all flex items-center justify-center space-x-1.5"
+                >
+                  <Heart className="w-4 h-4 fill-white" />
+                  <span>Join this Hangout</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Profile Detail Drawer / Sheet */}
       {selectedCreator && selectedHangout && (
