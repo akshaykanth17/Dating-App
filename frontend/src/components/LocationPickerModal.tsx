@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, Search, Navigation, X, Check, Loader2, Globe } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -11,21 +11,21 @@ export interface LocationCoordinates {
   locationName: string;
 }
 
-export const POPULAR_CITIES: { name: string; state: string; lat: number; lng: number }[] = [
-  { name: 'New Delhi', state: 'Delhi', lat: 28.6139, lng: 77.2090 },
-  { name: 'Mumbai', state: 'Maharashtra', lat: 19.0760, lng: 72.8777 },
-  { name: 'Bengaluru', state: 'Karnataka', lat: 12.9716, lng: 77.5946 },
-  { name: 'Palakkad', state: 'Kerala', lat: 10.7867, lng: 76.6548 },
-  { name: 'Kochi', state: 'Kerala', lat: 9.9312, lng: 76.2673 },
-  { name: 'Chennai', state: 'Tamil Nadu', lat: 13.0827, lng: 80.2707 },
-  { name: 'Hyderabad', state: 'Telangana', lat: 17.3850, lng: 78.4867 },
-  { name: 'Pune', state: 'Maharashtra', lat: 18.5204, lng: 73.8567 },
-  { name: 'Kolkata', state: 'West Bengal', lat: 22.5726, lng: 88.3639 },
-  { name: 'Goa', state: 'Goa', lat: 15.2993, lng: 74.1240 },
-  { name: 'London', state: 'UK', lat: 51.5074, lng: -0.1278 },
-  { name: 'New York', state: 'USA', lat: 40.7128, lng: -74.0060 },
-  { name: 'Dubai', state: 'UAE', lat: 25.2048, lng: 55.2708 },
-  { name: 'Singapore', state: 'Singapore', lat: 1.3521, lng: 103.8198 },
+export const POPULAR_CITIES: { name: string; state: string; country: string; lat: number; lng: number }[] = [
+  { name: 'Palakkad', state: 'Kerala', country: 'India', lat: 10.7867, lng: 76.6548 },
+  { name: 'New Delhi', state: 'Delhi', country: 'India', lat: 28.6139, lng: 77.2090 },
+  { name: 'Mumbai', state: 'Maharashtra', country: 'India', lat: 19.0760, lng: 72.8777 },
+  { name: 'Bengaluru', state: 'Karnataka', country: 'India', lat: 12.9716, lng: 77.5946 },
+  { name: 'Kochi', state: 'Kerala', country: 'India', lat: 9.9312, lng: 76.2673 },
+  { name: 'Chennai', state: 'Tamil Nadu', country: 'India', lat: 13.0827, lng: 80.2707 },
+  { name: 'Hyderabad', state: 'Telangana', country: 'India', lat: 17.3850, lng: 78.4867 },
+  { name: 'Pune', state: 'Maharashtra', country: 'India', lat: 18.5204, lng: 73.8567 },
+  { name: 'Kolkata', state: 'West Bengal', country: 'India', lat: 22.5726, lng: 88.3639 },
+  { name: 'Goa', state: 'Goa', country: 'India', lat: 15.2993, lng: 74.1240 },
+  { name: 'London', state: 'England', country: 'UK', lat: 51.5074, lng: -0.1278 },
+  { name: 'New York', state: 'NY', country: 'USA', lat: 40.7128, lng: -74.0060 },
+  { name: 'Dubai', state: 'Dubai', country: 'UAE', lat: 25.2048, lng: 55.2708 },
+  { name: 'Singapore', state: 'Central', country: 'Singapore', lat: 1.3521, lng: 103.8198 },
 ];
 
 interface LocationPickerModalProps {
@@ -50,16 +50,33 @@ export default function LocationPickerModal({
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [searchResults, setSearchResults] = useState<{ name: string; lat: number; lng: number }[]>([]);
-  const [selectedLoc, setSelectedLoc] = useState<LocationCoordinates | null>(() => {
+  const [selectedLoc, setSelectedLoc] = useState<LocationCoordinates | null>(null);
+
+  // Sync and resolve location name on open or coordinate change
+  useEffect(() => {
+    if (!isOpen) return;
+
     if (currentLat && currentLng) {
-      return {
-        latitude: currentLat,
-        longitude: currentLng,
-        locationName: currentLocationName || `${currentLat.toFixed(2)}°, ${currentLng.toFixed(2)}°`,
-      };
+      const isRawCoord = !currentLocationName || /^\d+(\.\d+)?°/.test(currentLocationName);
+
+      if (!isRawCoord && currentLocationName) {
+        setSelectedLoc({
+          latitude: currentLat,
+          longitude: currentLng,
+          locationName: currentLocationName,
+        });
+      } else {
+        // Resolve readable city name
+        reverseGeocode(currentLat, currentLng).then((name) => {
+          setSelectedLoc({
+            latitude: currentLat,
+            longitude: currentLng,
+            locationName: name,
+          });
+        });
+      }
     }
-    return null;
-  });
+  }, [isOpen, currentLat, currentLng, currentLocationName]);
 
   const handleUseGPS = () => {
     if (!navigator.geolocation) {
@@ -108,9 +125,10 @@ export default function LocationPickerModal({
     const filteredPopular = POPULAR_CITIES.filter(
       (c) =>
         c.name.toLowerCase().includes(text.toLowerCase()) ||
-        c.state.toLowerCase().includes(text.toLowerCase())
+        c.state.toLowerCase().includes(text.toLowerCase()) ||
+        c.country.toLowerCase().includes(text.toLowerCase())
     ).map((c) => ({
-      name: `${c.name}, ${c.state}`,
+      name: `${c.name}, ${c.state}, ${c.country}`,
       lat: c.lat,
       lng: c.lng,
     }));
@@ -163,7 +181,7 @@ export default function LocationPickerModal({
         onLocationSelected(selectedLoc);
       }
 
-      // If user is authenticated, also persist to backend
+      // If user is authenticated, persist to backend
       if (user) {
         await api.put('/profiles/me', {
           latitude: selectedLoc.latitude,
@@ -180,7 +198,6 @@ export default function LocationPickerModal({
       onClose();
     } catch (err: any) {
       console.error('[LocationPickerModal] Save failed:', err);
-      // Still close if callback succeeded
       onClose();
     } finally {
       setIsSaving(false);
@@ -251,7 +268,7 @@ export default function LocationPickerModal({
                     type="text"
                     value={query}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="e.g. New Delhi, Mumbai, London..."
+                    placeholder="e.g. Palakkad, New Delhi, Mumbai..."
                     className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl pl-9.5 pr-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 placeholder:text-slate-500"
                   />
                   {query && (
@@ -304,7 +321,7 @@ export default function LocationPickerModal({
                         type="button"
                         onClick={() =>
                           handleSelectCity({
-                            name: `${c.name}, ${c.state}`,
+                            name: `${c.name}, ${c.state}, ${c.country}`,
                             lat: c.lat,
                             lng: c.lng,
                           })
@@ -325,14 +342,15 @@ export default function LocationPickerModal({
 
               {/* Active Selection Preview */}
               {selectedLoc && (
-                <div className="p-3.5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 flex items-center justify-between">
-                  <div className="flex items-center space-x-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
-                      <Check className="w-4 h-4" />
+                <div className="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 flex items-center justify-between shadow-inner">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                      <Check className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-400">Selected Location</p>
-                      <p className="text-xs font-bold text-slate-100 truncate mt-0.5">{selectedLoc.locationName}</p>
+                      <p className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-400">Selected Location</p>
+                      <p className="text-sm font-bold text-slate-100 truncate mt-0.5">{selectedLoc.locationName}</p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">{selectedLoc.latitude.toFixed(4)}°, {selectedLoc.longitude.toFixed(4)}°</p>
                     </div>
                   </div>
                 </div>
