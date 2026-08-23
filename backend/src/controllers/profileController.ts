@@ -1,5 +1,7 @@
 import { Response } from 'express';
 import bcrypt from 'bcrypt';
+import fs from 'fs';
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { getStorageService } from '../services/storageService';
@@ -48,6 +50,37 @@ export class ProfileController {
 
       if (!profile) {
         return res.status(404).json({ error: 'Profile not found' });
+      }
+
+      // Auto self-healing: purge any stale /uploads/ photo records that no longer exist on disk
+      const uploadDir = path.resolve(process.env.UPLOAD_DIR || 'uploads');
+      const validPhotos = [];
+      const deadPhotoIds: string[] = [];
+
+      for (const p of profile.photos) {
+        if (p.url.startsWith('/uploads/')) {
+          const filename = path.basename(p.url);
+          const fullFilePath = path.join(uploadDir, filename);
+          if (!fs.existsSync(fullFilePath)) {
+            deadPhotoIds.push(p.id);
+            continue;
+          }
+        }
+        validPhotos.push(p);
+      }
+
+      if (deadPhotoIds.length > 0) {
+        await prisma.photo.deleteMany({
+          where: { id: { in: deadPhotoIds } }
+        });
+        if (validPhotos.length > 0 && !validPhotos.some(p => p.isPrimary)) {
+          validPhotos[0].isPrimary = true;
+          await prisma.photo.update({
+            where: { id: validPhotos[0].id },
+            data: { isPrimary: true }
+          });
+        }
+        profile.photos = validPhotos;
       }
 
       const completionPercentage = calculateProfileCompletion(profile);
@@ -204,11 +237,6 @@ export class ProfileController {
       const photo = profile.photos.find((p) => p.id === photoId);
       if (!photo) {
         return res.status(404).json({ error: 'Photo not found on this profile' });
-      }
-
-      // Enforce at least 1 photo must remain
-      if (profile.photos.length <= 1) {
-        return res.status(400).json({ error: 'You must keep at least one profile photo' });
       }
 
       // Delete from storage

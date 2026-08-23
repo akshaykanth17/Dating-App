@@ -221,13 +221,15 @@ export default function ProfilePage() {
   // Delete image
   const handlePhotoDelete = async (photoId: string) => {
     setProfileError('');
-    if (photos.length <= 1) {
-      setProfileError('You must keep at least one profile photo.');
-      return;
-    }
     try {
       await api.delete(`/profiles/me/photos/${photoId}`);
-      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      setPhotos((prev) => {
+        const remaining = prev.filter((p) => p.id !== photoId);
+        if (remaining.length > 0 && !remaining.some((p) => p.isPrimary)) {
+          remaining[0].isPrimary = true;
+        }
+        return remaining;
+      });
       setProfileSuccess('Photo deleted successfully!');
     } catch (err: any) {
       setProfileError(err.message || 'Failed to delete photo.');
@@ -321,7 +323,13 @@ export default function ProfilePage() {
                   <img
                     src={getPhotoUrl(p.url)}
                     alt="Profile"
-                    onError={handleImageError}
+                    onError={(e) => {
+                      handleImageError(e);
+                      // If there's another photo, auto-clean the broken one so user only sees their real uploaded photo
+                      if (photos.length > 1 && p.url.startsWith('/uploads/')) {
+                        handlePhotoDelete(p.id);
+                      }
+                    }}
                     className="w-full h-full object-cover"
                   />
                   
@@ -359,19 +367,9 @@ export default function ProfilePage() {
                     )}
                     <button
                       type="button"
-                      onClick={() => {
-                        if (photos.length <= 1) {
-                          setProfileError('You must keep at least one profile photo.');
-                          return;
-                        }
-                        handlePhotoDelete(p.id);
-                      }}
-                      className={`p-1.5 rounded-lg text-white transition-all ${
-                        photos.length <= 1
-                          ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60'
-                          : 'bg-rose-600 hover:bg-rose-500'
-                      }`}
-                      title={photos.length <= 1 ? 'You must keep at least 1 photo' : 'Delete Photo'}
+                      onClick={() => handlePhotoDelete(p.id)}
+                      className="p-1.5 rounded-lg text-white transition-all bg-rose-600 hover:bg-rose-500"
+                      title="Delete Photo"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
