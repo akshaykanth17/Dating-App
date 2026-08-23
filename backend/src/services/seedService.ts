@@ -382,3 +382,116 @@ export async function seedDummyDataIfEmpty(prisma: PrismaClient) {
     console.error('[SeedService] Seeding error:', error);
   }
 }
+
+export async function cleanAllDummyData(prisma: PrismaClient): Promise<{ deletedUsers: number; deletedHangouts: number }> {
+  try {
+    console.log('[SeedService] Cleaning all demo profiles and demo hangouts from live database...');
+
+    // 1. Find all demo user IDs
+    const demoUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { email: { endsWith: '@demo.heartsync.app' } },
+          { email: { endsWith: '@seed.heartsync.app' } },
+        ]
+      },
+      select: { id: true }
+    });
+
+    const demoUserIds = demoUsers.map(u => u.id);
+
+    // 2. Delete Hangouts created by demo users or matching dummy hangout titles
+    const dummyTitles = DUMMY_HANGOUTS.map(h => h.title);
+    const deletedHangoutsResult = await prisma.hangout.deleteMany({
+      where: {
+        OR: [
+          { creatorId: { in: demoUserIds } },
+          { title: { in: dummyTitles } }
+        ]
+      }
+    });
+
+    if (demoUserIds.length > 0) {
+      // 3. Delete messages involving demo users
+      await prisma.message.deleteMany({
+        where: {
+          senderId: { in: demoUserIds }
+        }
+      });
+
+      // 4. Delete matches involving demo users
+      await prisma.match.deleteMany({
+        where: {
+          OR: [
+            { user1Id: { in: demoUserIds } },
+            { user2Id: { in: demoUserIds } }
+          ]
+        }
+      });
+
+      // 5. Delete swipes involving demo users
+      await prisma.swipe.deleteMany({
+        where: {
+          OR: [
+            { swiperId: { in: demoUserIds } },
+            { swipedId: { in: demoUserIds } }
+          ]
+        }
+      });
+
+      // 6. Delete blocks involving demo users
+      await prisma.block.deleteMany({
+        where: {
+          OR: [
+            { blockerId: { in: demoUserIds } },
+            { blockedId: { in: demoUserIds } }
+          ]
+        }
+      });
+
+      // 7. Delete reports involving demo users
+      await prisma.report.deleteMany({
+        where: {
+          OR: [
+            { reporterId: { in: demoUserIds } },
+            { reportedId: { in: demoUserIds } }
+          ]
+        }
+      });
+
+      // 8. Delete photos & prompts for demo profiles
+      const demoProfiles = await prisma.profile.findMany({
+        where: { userId: { in: demoUserIds } },
+        select: { id: true }
+      });
+      const demoProfileIds = demoProfiles.map(p => p.id);
+
+      if (demoProfileIds.length > 0) {
+        await prisma.photo.deleteMany({
+          where: { profileId: { in: demoProfileIds } }
+        });
+        await prisma.prompt.deleteMany({
+          where: { profileId: { in: demoProfileIds } }
+        });
+        await prisma.profile.deleteMany({
+          where: { id: { in: demoProfileIds } }
+        });
+      }
+
+      // 9. Finally delete demo users
+      const deletedUsersResult = await prisma.user.deleteMany({
+        where: { id: { in: demoUserIds } }
+      });
+
+      console.log(`[SeedService] Successfully purged ${deletedUsersResult.count} demo users and ${deletedHangoutsResult.count} demo hangouts.`);
+      return { deletedUsers: deletedUsersResult.count, deletedHangouts: deletedHangoutsResult.count };
+    }
+
+    console.log(`[SeedService] No demo users found to delete. Cleaned ${deletedHangoutsResult.count} dummy hangouts.`);
+    return { deletedUsers: 0, deletedHangouts: deletedHangoutsResult.count };
+  } catch (error) {
+    console.error('[SeedService] Error cleaning dummy data:', error);
+    return { deletedUsers: 0, deletedHangouts: 0 };
+  }
+}
+

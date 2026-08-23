@@ -70,6 +70,7 @@ export class HangoutController {
       const blockedIds = blocks.map((b) => (b.blockerId === userId ? b.blockedId : b.blockerId));
 
       let hangouts: any[] = [];
+      const now = new Date();
 
       if (swiperProfile) {
         hangouts = await prisma.hangout.findMany({
@@ -78,7 +79,15 @@ export class HangoutController {
               not: userId,
               notIn: blockedIds,
             },
+            eventDate: {
+              gte: now,
+            },
             creator: {
+              email: {
+                not: {
+                  endsWith: '@demo.heartsync.app',
+                },
+              },
               profile: {
                 gender: { in: swiperProfile.gendersInterestedIn },
                 gendersInterestedIn: { has: swiperProfile.gender }
@@ -105,43 +114,8 @@ export class HangoutController {
         });
       }
 
-      // Fallback: If no hangouts match strict gender filter or swiper has no profile yet,
-      // return all available active/demo hangouts from other users!
-      if (hangouts.length === 0) {
-        hangouts = await prisma.hangout.findMany({
-          where: {
-            creatorId: {
-              not: userId,
-              notIn: blockedIds,
-            }
-          },
-          include: {
-            creator: {
-              include: {
-                profile: {
-                  include: {
-                    photos: {
-                      orderBy: { isPrimary: 'desc' }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          orderBy: {
-            eventDate: 'asc'
-          },
-          take: 30
-        });
-      }
-
-      // Ensure any past hangout event dates are dynamically presented as upcoming
-      const now = new Date();
-      const formattedHangouts = hangouts.map((h, idx) => {
-        let eventDate = h.eventDate;
-        if (new Date(eventDate) <= now) {
-          eventDate = new Date(Date.now() + (24 + idx * 12) * 60 * 60 * 1000);
-        }
+      const formattedHangouts = hangouts.map((h) => {
+        const eventDate = h.eventDate;
 
         return {
           id: h.id,

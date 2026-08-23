@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import Layout from '../components/Layout';
 import ProfileCardContent from '../components/ProfileCardContent';
-import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, Sparkles, Flame, User as UserIcon } from 'lucide-react';
+import { X, Heart, ShieldAlert, Star, RefreshCw, AlertCircle, Sparkles, Flame, User as UserIcon, SlidersHorizontal } from 'lucide-react';
 import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from 'framer-motion';
+import { getPhotoUrl, handleImageError } from '../utils/photoUrl';
 
 interface Candidate {
   id: string;
@@ -59,8 +60,6 @@ export default function SwipePage() {
   const bgScale = useTransform(x, [-200, 0, 200], [1, 0.95, 1]);
   const bgFilter = useTransform(x, [-200, 0, 200], ['blur(0px)', 'blur(8px)', 'blur(0px)']);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
   const fetchCandidates = async () => {
     setIsLoading(true);
     try {
@@ -71,18 +70,6 @@ export default function SwipePage() {
       console.error('[SwipePage] Failed to fetch discovery candidates:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleResetAndReload = async () => {
-    setIsLoading(true);
-    try {
-      await api.post('/swipes/reset', {});
-      await api.get('/seed?secret=heartsync-seed-2026').catch(() => {});
-      await fetchCandidates();
-    } catch (err) {
-      console.error('[SwipePage] Failed to reset:', err);
-      fetchCandidates();
     }
   };
 
@@ -235,19 +222,19 @@ export default function SwipePage() {
             </div>
           ) : candidates.length === 0 || currentIndex >= candidates.length ? (
             <div className="text-center py-16 px-6 glass rounded-3xl max-w-md w-full border border-slate-800">
-              <Star className="w-16 h-16 text-rose-500/40 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-slate-100">You've seen everyone!</h3>
+              <Sparkles className="w-16 h-16 text-rose-500/40 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-slate-100">You're all caught up!</h3>
               <p className="text-slate-400 mt-2 text-sm leading-relaxed max-w-xs mx-auto">
-                No more active cards in your area. You can reset your swipe history to review demo profiles again anytime!
+                There are no more profiles in your area right now. Adjust your distance or age preferences in Settings, or check back soon!
               </p>
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <button
-                  onClick={handleResetAndReload}
+                <Link
+                  to="/settings"
                   className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-2.5 rounded-full bg-gradient text-white text-sm font-bold shadow-lg shadow-rose-500/25 hover:opacity-95 transition-all"
                 >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Reload Demo Profiles</span>
-                </button>
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span>Adjust Filters</span>
+                </Link>
                 <button
                   onClick={fetchCandidates}
                   className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-sm font-semibold transition-colors"
@@ -462,11 +449,9 @@ export default function SwipePage() {
               <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-rose-500 shadow-2xl rotate-[-6deg]">
                 {user?.profile?.photos && user.profile.photos.length > 0 ? (
                   <img
-                    src={user.profile.photos[0].url.startsWith('/uploads')
-                      ? `${API_URL.replace('/api', '')}${user.profile.photos[0].url}`
-                      : user.profile.photos[0].url
-                    }
+                    src={getPhotoUrl(user.profile.photos[0].url)}
                     alt="You"
+                    onError={handleImageError}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -478,11 +463,9 @@ export default function SwipePage() {
               <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-rose-500 shadow-2xl rotate-[6deg]">
                 {swipeResult.otherProfile?.photos && swipeResult.otherProfile.photos.length > 0 ? (
                   <img
-                    src={swipeResult.otherProfile.photos[0].url.startsWith('/uploads')
-                      ? `${API_URL.replace('/api', '')}${swipeResult.otherProfile.photos[0].url}`
-                      : swipeResult.otherProfile.photos[0].url
-                    }
+                    src={getPhotoUrl(swipeResult.otherProfile.photos[0].url)}
                     alt={swipeResult.otherProfile.name}
+                    onError={handleImageError}
                     className="w-full h-full object-cover"
                   />
                 ) : (

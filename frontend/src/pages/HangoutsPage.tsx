@@ -127,17 +127,6 @@ export default function HangoutsPage() {
     }
   };
 
-  const handleResetAndReloadHangouts = async () => {
-    localStorage.removeItem(SWIPED_KEY);
-    setLoading(true);
-    try {
-      await api.get('/seed?secret=heartsync-seed-2026').catch(() => {});
-      await fetchHangouts();
-    } catch {
-      fetchHangouts();
-    }
-  };
-
   useEffect(() => {
     fetchHangouts();
     const userKey = user?.id ? `heartsync_hangouts_toast_v2_${user.id}` : 'heartsync_hangouts_toast_v2';
@@ -299,9 +288,9 @@ export default function HangoutsPage() {
         ) : isDone ? (
           <div className="text-center py-16 glass rounded-3xl border border-slate-800 w-full px-6">
             <Calendar className="w-16 h-16 text-rose-500/40 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-200">No more hangouts!</h3>
+            <h3 className="text-xl font-bold text-slate-200">No active hangouts nearby</h3>
             <p className="text-slate-400 mt-2 text-sm max-w-xs mx-auto">
-              You've explored all current events. Post your own hangout or reload active demo meetups!
+              There are no upcoming meetups posted in your area right now. Be the first to create one!
             </p>
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
@@ -309,14 +298,14 @@ export default function HangoutsPage() {
                 className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-2.5 rounded-full bg-gradient text-white text-sm font-bold shadow-lg shadow-rose-500/25 hover:opacity-95 transition-all"
               >
                 <Plus className="w-4 h-4" />
-                <span>Post a Hangout</span>
+                <span>Post an Event</span>
               </button>
               <button
-                onClick={handleResetAndReloadHangouts}
+                onClick={fetchHangouts}
                 className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-sm font-semibold transition-colors"
               >
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Reload Demo Hangouts</span>
+                <RefreshCw className="w-4 h-4" />
+                <span>Refresh</span>
               </button>
             </div>
           </div>
