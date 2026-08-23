@@ -589,15 +589,9 @@ export default function ProfilePage() {
 
                 {/* Location Section */}
                 <div className="border-t border-slate-800/50 pt-6 mt-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Location & Discovery Area
-                    </label>
-                    <span className="text-[10px] text-rose-400 font-semibold flex items-center">
-                      <MapPin className="w-3 h-3 mr-0.5" />
-                      <span>Tap to change</span>
-                    </span>
-                  </div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Location & Discovery Area
+                  </label>
 
                   <div
                     onClick={() => setShowLocationModal(true)}

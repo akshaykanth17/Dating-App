@@ -207,9 +207,8 @@ export default function SettingsPage() {
 
               {/* Your Location */}
               <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                  <span>Your Current Location</span>
-                  <span className="text-[10px] text-rose-400 font-semibold">Tappable</span>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Your Current Location
                 </label>
                 <div
                   onClick={() => setShowLocationModal(true)}
