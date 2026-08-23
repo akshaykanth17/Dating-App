@@ -150,16 +150,16 @@ export default function SettingsPage() {
 
   return (
     <Layout>
-      <div className="space-y-8 max-w-2xl mx-auto pb-12">
-        <h1 className="text-3xl font-extrabold text-slate-100 flex items-center space-x-2">
-          <Settings className="w-8 h-8 text-rose-500" />
+      <div className="w-full max-w-2xl mx-auto space-y-6 pb-20">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 flex items-center space-x-2">
+          <Settings className="w-7 h-7 sm:w-8 sm:h-8 text-rose-500" />
           <span>App Settings</span>
         </h1>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Match Preferences card */}
-          <div className="glass p-6 rounded-2xl border border-slate-800">
-            <h3 className="text-lg font-bold text-slate-200 mb-6">Discovery Preferences</h3>
+          <div className="glass p-4 sm:p-6 rounded-2xl border border-slate-800 w-full overflow-hidden">
+            <h3 className="text-base sm:text-lg font-bold text-slate-200 mb-5">Discovery Preferences</h3>
 
             {settingsError && <p className="text-xs text-rose-400 mb-4">{settingsError}</p>}
             {settingsSuccess && <p className="text-xs text-emerald-400 mb-4">{settingsSuccess}</p>}
@@ -193,7 +193,7 @@ export default function SettingsPage() {
                     onChange={(e) => setAgeMin(Number(e.target.value))}
                     className="w-20 bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-2.5 py-1.5 text-center text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
-                  <span className="text-slate-500">to</span>
+                  <span className="text-slate-500 text-xs">to</span>
                   <input
                     type="number"
                     min={18}
@@ -213,20 +213,20 @@ export default function SettingsPage() {
                 </label>
                 <div
                   onClick={() => setShowLocationModal(true)}
-                  className="w-full bg-slate-900/90 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-2xl p-3.5 flex items-center justify-between transition-all cursor-pointer group shadow-sm hover:shadow-rose-500/10"
+                  className="w-full bg-slate-900/90 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between transition-all cursor-pointer group shadow-sm hover:shadow-rose-500/10 min-w-0"
                 >
-                  <div className="flex items-center space-x-3 min-w-0">
+                  <div className="flex items-center space-x-3 min-w-0 flex-1 mr-2">
                     <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 group-hover:bg-rose-500/25 flex items-center justify-center text-rose-500 flex-shrink-0 transition-colors">
                       <MapPin className="w-4 h-4" />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold text-slate-100 group-hover:text-rose-200 transition-colors truncate">
                         {locationName || 'Set your location'}
                       </p>
-                      <p className="text-[11px] text-slate-400">Tap to change city or detect GPS</p>
+                      <p className="text-[11px] text-slate-400 truncate">Tap to change city or detect GPS</p>
                     </div>
                   </div>
-                  <span className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition-colors flex-shrink-0 ml-2">
+                  <span className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition-colors flex-shrink-0">
                     Change ✎
                   </span>
                 </div>
@@ -236,7 +236,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={isSavingSettings}
-                  className="px-6 py-2.5 rounded-xl bg-gradient text-white text-xs font-bold shadow-md hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient text-white text-xs font-bold shadow-md hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {isSavingSettings ? 'Saving...' : 'Save Preferences'}
                 </button>
@@ -245,8 +245,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Change Password Card */}
-          <div className="glass p-6 rounded-2xl border border-slate-800">
-            <h3 className="text-lg font-bold text-slate-200 mb-6 flex items-center space-x-2">
+          <div className="glass p-4 sm:p-6 rounded-2xl border border-slate-800 w-full overflow-hidden">
+            <h3 className="text-base sm:text-lg font-bold text-slate-200 mb-5 flex items-center space-x-2">
               <Lock className="w-5 h-5 text-rose-500" />
               <span>Security Settings</span>
             </h3>
@@ -255,7 +255,7 @@ export default function SettingsPage() {
             {passwordSuccess && <p className="text-xs text-emerald-400 mb-4">{passwordSuccess}</p>}
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Current Password</label>
                   <input
@@ -263,7 +263,7 @@ export default function SettingsPage() {
                     required
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                 </div>
                 <div>
@@ -273,7 +273,7 @@ export default function SettingsPage() {
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                 </div>
                 <div>
@@ -283,7 +283,7 @@ export default function SettingsPage() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                 </div>
               </div>
@@ -292,7 +292,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={isSavingPassword}
-                  className="px-6 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-bold hover:bg-slate-700 transition-colors disabled:opacity-50"
+                  className="w-full sm:w-auto px-6 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-bold hover:bg-slate-700 transition-colors disabled:opacity-50"
                 >
                   {isSavingPassword ? 'Updating...' : 'Change Password'}
                 </button>
@@ -301,19 +301,19 @@ export default function SettingsPage() {
           </div>
 
           {/* Subtle Low-Priority App Tutorial Row */}
-          <div className="p-4 rounded-2xl border border-slate-800/80 bg-slate-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-slate-800/80 text-slate-400">
+          <div className="p-4 rounded-2xl border border-slate-800/80 bg-slate-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs w-full overflow-hidden">
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="p-2 rounded-xl bg-slate-800/80 text-slate-400 flex-shrink-0">
                 <PlayCircle className="w-4 h-4 text-slate-300" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center space-x-2">
                   <span className="font-semibold text-slate-200 text-xs">App Tutorial</span>
                   <span className="text-[10px] text-slate-500 font-medium">
                     ({MAX_REWATCH_LIMIT - rewatchCount} / {MAX_REWATCH_LIMIT} left)
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-[11px] text-slate-500 mt-0.5 truncate sm:whitespace-normal">
                   {rewatchCount >= MAX_REWATCH_LIMIT
                     ? 'Maximum 3 re-watches reached.'
                     : 'Re-watch the onboarding guide and practice bot swiping.'}
@@ -335,7 +335,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Delete Account Card */}
-          <div className="p-6 rounded-2xl border border-rose-950/40 bg-rose-950/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="p-4 sm:p-6 rounded-2xl border border-rose-950/40 bg-rose-950/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full overflow-hidden">
             <div>
               <h4 className="text-sm font-bold text-rose-400">Danger Zone</h4>
               <p className="text-xs text-slate-400 mt-1 max-w-md leading-relaxed">
@@ -345,7 +345,7 @@ export default function SettingsPage() {
 
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="px-5 py-2.5 rounded-xl border border-rose-500/30 text-rose-500 font-bold hover:bg-rose-500/10 transition-colors text-xs flex-shrink-0"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-rose-500/30 text-rose-500 font-bold hover:bg-rose-500/10 transition-colors text-xs flex-shrink-0"
             >
               Delete Account
             </button>

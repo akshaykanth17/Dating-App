@@ -38,7 +38,7 @@ export default function Layout({ children }: LayoutProps) {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
+    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 overflow-x-hidden">
       {/* Location Picker Modal */}
       <LocationPickerModal
         isOpen={showLocationModal}
@@ -104,8 +104,7 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Main Content Area */}
-      {/* Added pb-20 on mobile to prevent content from hiding behind the bottom nav */}
-      <main className="flex-1 container mx-auto px-4 py-6 pb-24 md:pb-6 max-w-6xl flex flex-col justify-center">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-24 md:pb-8 flex flex-col">
         {children}
       </main>
 
