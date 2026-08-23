@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import {
   Calendar, MapPin, Clock, Plus, Heart, X, User as UserIcon,
-  RefreshCw, Map, Sparkles, Coffee
+  RefreshCw, Map, Sparkles, Coffee, ExternalLink
 } from 'lucide-react';
 import ProfileCardContent from '../components/ProfileCardContent';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -558,18 +558,30 @@ export default function HangoutsPage() {
                     </div>
                   </div>
 
-                  {/* Where */}
-                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-3.5 flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 flex-shrink-0 mt-0.5">
+                  {/* Where (Clickable to Google Maps) */}
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(viewingHangoutDetail.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-2xl p-3.5 flex items-start space-x-3 transition-all group shadow-md hover:shadow-rose-500/10 cursor-pointer"
+                    title="Open location in Google Maps"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 group-hover:bg-rose-500/25 group-hover:scale-105 flex items-center justify-center text-rose-400 flex-shrink-0 mt-0.5 transition-all">
                       <MapPin className="w-4 h-4" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Location</p>
-                      <p className="text-sm font-semibold text-slate-100 mt-0.5 leading-snug">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Location</p>
+                        <span className="text-[10px] font-semibold text-rose-400 flex items-center space-x-0.5 group-hover:text-rose-300">
+                          <span>Maps</span>
+                          <ExternalLink className="w-2.5 h-2.5 ml-0.5" />
+                        </span>
+                      </div>
+                      <p className="text-sm font-semibold text-slate-100 mt-0.5 leading-snug group-hover:text-rose-200 transition-colors">
                         {viewingHangoutDetail.location}
                       </p>
                     </div>
-                  </div>
+                  </a>
                 </div>
 
                 {/* Host Section */}
