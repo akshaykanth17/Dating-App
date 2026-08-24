@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserIcon, Star, MapPin } from 'lucide-react';
+import { UserIcon, Star, MapPin, Briefcase, GraduationCap, Ruler, Scale, Dumbbell, Wine, Cigarette } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getPhotoUrl, handleImageError } from '../utils/photoUrl';
 
@@ -135,38 +135,45 @@ export default function ProfileCardContent({ candidate, isTop, likeOpacity, pass
         {/* Info Pills */}
         <div className="flex flex-wrap gap-2">
           {candidate.job && (
-            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-              💼 <span>{candidate.job}</span>
+            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5">
+              <Briefcase className="w-3.5 h-3.5 text-rose-400" />
+              <span>{candidate.job}</span>
             </span>
           )}
           {candidate.education && (
-            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-              🎓 <span>{candidate.education}</span>
+            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5">
+              <GraduationCap className="w-3.5 h-3.5 text-rose-400" />
+              <span>{candidate.education}</span>
             </span>
           )}
           {candidate.height && (
-            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-              📏 <span>{candidate.height} cm</span>
+            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5">
+              <Ruler className="w-3.5 h-3.5 text-rose-400" />
+              <span>{candidate.height} cm</span>
             </span>
           )}
           {candidate.weight && (
-            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-              ⚖️ <span>{candidate.weight} kg</span>
+            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5">
+              <Scale className="w-3.5 h-3.5 text-rose-400" />
+              <span>{candidate.weight} kg</span>
             </span>
           )}
           {candidate.gym && (
-            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-              💪 <span>Gym: {candidate.gym}</span>
+            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5">
+              <Dumbbell className="w-3.5 h-3.5 text-rose-400" />
+              <span>Gym: {candidate.gym}</span>
             </span>
           )}
           {candidate.drinking && (
-            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-              🍷 <span>Drinks: {candidate.drinking}</span>
+            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5">
+              <Wine className="w-3.5 h-3.5 text-rose-400" />
+              <span>Drinks: {candidate.drinking}</span>
             </span>
           )}
           {candidate.smoking && (
-            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">
-              🚬 <span>Smokes: {candidate.smoking}</span>
+            <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5">
+              <Cigarette className="w-3.5 h-3.5 text-rose-400" />
+              <span>Smokes: {candidate.smoking}</span>
             </span>
           )}
           {candidate.favoriteSpot && (

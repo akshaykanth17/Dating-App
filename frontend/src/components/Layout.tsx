@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Flame, MessageSquare, User, CircleUser, Map, MapPin } from 'lucide-react';
+import { Flame, MessageSquare, User, CircleUser, Map, MapPin, Pencil } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
 
 import LocationPickerModal from './LocationPickerModal';
@@ -61,7 +61,7 @@ export default function Layout({ children }: LayoutProps) {
               >
                 <MapPin className="w-3 h-3 mr-0.5 text-rose-500 group-hover:scale-110 transition-transform" />
                 <span className="truncate max-w-[130px] sm:max-w-[180px]">{locationName || 'Set Location'}</span>
-                <span className="text-[9px] text-rose-400/80 ml-1 group-hover:underline">✎</span>
+                <Pencil className="w-2.5 h-2.5 text-rose-400/80 ml-1" />
               </button>
             </div>
           </div>

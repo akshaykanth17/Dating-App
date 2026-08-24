@@ -25,7 +25,7 @@ export default function GenderFilter({ value, onChange }: GenderFilterProps) {
                 : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'
             }`}
           >
-            {g === 'male' ? '👨 Men' : g === 'female' ? '👩 Women' : '🌈 Other'}
+            {g === 'male' ? 'Men' : g === 'female' ? 'Women' : 'Other'}
           </button>
         ))}
       </div>

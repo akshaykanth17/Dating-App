@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { Camera, ChevronRight, ChevronLeft, MapPin, Heart, User, Calendar, Check, Loader2, AlertCircle, X, Search, Globe } from 'lucide-react';
+import { Camera, ChevronRight, ChevronLeft, MapPin, Heart, User, Calendar, Check, Loader2, AlertCircle, X, Search, Globe, Pencil } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
 import LocationPickerModal, { POPULAR_CITIES } from '../components/LocationPickerModal';
 
@@ -127,7 +127,7 @@ export default function OnboardingPage() {
         setLatitude(pos.coords.latitude);
         setLongitude(pos.coords.longitude);
         const locName = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-        setLocationStatus(`📍 ${locName}`);
+        setLocationStatus(locName);
         setLocationLoading(false);
       },
       async () => {
@@ -136,7 +136,7 @@ export default function OnboardingPage() {
         setLatitude(defaultLat);
         setLongitude(defaultLon);
         const locName = await reverseGeocode(defaultLat, defaultLon);
-        setLocationStatus(`📍 ${locName} (Default)`);
+        setLocationStatus(`${locName} (Default)`);
         setLocationLoading(false);
       },
       { timeout: 10000 }
@@ -376,7 +376,12 @@ export default function OnboardingPage() {
                   className="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
                 {ageError && <p className="text-rose-400 text-xs mt-1.5">{ageError}</p>}
-                {birthdate && !ageError && <p className="text-emerald-400 text-xs mt-1.5">✅ Age verified — you're {calculateAge(birthdate)}</p>}
+                {birthdate && !ageError && (
+                  <p className="text-emerald-400 text-xs mt-1.5 flex items-center space-x-1">
+                    <Check className="w-3.5 h-3.5 inline mr-1" />
+                    <span>Age verified — you're {calculateAge(birthdate)}</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -445,7 +450,10 @@ export default function OnboardingPage() {
                         <p className="text-sm font-bold text-slate-100 truncate">{locationStatus || 'Location Selected'}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-rose-400 font-bold group-hover:underline flex-shrink-0 ml-2">Change ✎</span>
+                    <span className="text-xs text-rose-400 font-bold group-hover:underline flex-shrink-0 ml-2 flex items-center space-x-1">
+                      <span>Change</span>
+                      <Pencil className="w-2.5 h-2.5" />
+                    </span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between py-1">
@@ -539,7 +547,7 @@ export default function OnboardingPage() {
                           : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'
                       }`}
                     >
-                      {g === 'male' ? '👨 Men' : g === 'female' ? '👩 Women' : '🌈 Other'}
+                      {g === 'male' ? 'Men' : g === 'female' ? 'Women' : 'Other'}
                     </button>
                   ))}
                 </div>
@@ -733,7 +741,7 @@ export default function OnboardingPage() {
                 <Camera className="w-5 h-5 text-rose-500" />
                 <h2 className="text-xl font-bold text-white">Your Photo</h2>
               </div>
-              <p className="text-slate-400 text-sm">A photo is required to start matching. Make it count! 📸</p>
+              <p className="text-slate-400 text-sm">A photo is required to start matching. Make it count!</p>
 
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -774,7 +782,10 @@ export default function OnboardingPage() {
               )}
 
               {photoUploaded && (
-                <p className="text-emerald-400 text-sm text-center font-semibold">✅ Photo uploaded! You're ready to go.</p>
+                <p className="text-emerald-400 text-sm text-center font-semibold flex items-center justify-center space-x-1.5">
+                  <Check className="w-4 h-4 inline mr-1" />
+                  <span>Photo uploaded! You're ready to go.</span>
+                </p>
               )}
             </div>
           )}

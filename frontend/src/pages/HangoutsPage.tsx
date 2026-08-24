@@ -6,7 +6,7 @@ import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import {
   Calendar, MapPin, Clock, Plus, Heart, X, User as UserIcon,
-  RefreshCw, Map, Sparkles, Coffee, ExternalLink, Settings2
+  RefreshCw, Map, Sparkles, Coffee, ExternalLink, Settings2, PartyPopper
 } from 'lucide-react';
 import FilterModal, { type FilterState } from '../components/FilterModal';
 import Confetti from 'react-confetti';
@@ -747,7 +747,50 @@ export default function HangoutsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
           <Confetti width={window.innerWidth} height={window.innerHeight} recycle={false} numberOfPieces={500} />
           <div className="max-w-sm w-full text-center relative z-10">
-            <div className="text-5xl mb-3">🎉</div>
+            <div className="mx-auto mb-6 h-32 w-64 relative flex items-center justify-center">
+              {/* Left Fist */}
+              <motion.div
+                initial={{ x: -120, opacity: 0 }}
+                animate={{ x: [-120, -25, -45], opacity: [0, 1, 1] }}
+                transition={{ duration: 0.4, times: [0, 0.6, 1], ease: "easeOut", delay: 0.1 }}
+                className="absolute z-10 text-[5.5rem] drop-shadow-xl"
+              >
+                🤜
+              </motion.div>
+              
+              {/* Right Fist */}
+              <motion.div
+                initial={{ x: 120, opacity: 0 }}
+                animate={{ x: [120, 25, 45], opacity: [0, 1, 1] }}
+                transition={{ duration: 0.4, times: [0, 0.6, 1], ease: "easeOut", delay: 0.1 }}
+                className="absolute z-10 text-[5.5rem] drop-shadow-xl"
+              >
+                🤛
+              </motion.div>
+
+              {/* Impact Spark Lines */}
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0, 1.2, 1.5], opacity: [0, 1, 0] }}
+                transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
+                className="absolute z-0 flex items-center justify-center w-full h-full pointer-events-none"
+              >
+                <div className="absolute top-0 w-1.5 h-6 bg-yellow-400 rounded-full" />
+                <div className="absolute bottom-0 w-1.5 h-6 bg-yellow-400 rounded-full" />
+                <div className="absolute top-4 left-10 w-1.5 h-6 bg-yellow-400 rounded-full -rotate-45" />
+                <div className="absolute top-4 right-10 w-1.5 h-6 bg-yellow-400 rounded-full rotate-45" />
+                <div className="absolute bottom-4 left-10 w-1.5 h-6 bg-yellow-400 rounded-full rotate-45" />
+                <div className="absolute bottom-4 right-10 w-1.5 h-6 bg-yellow-400 rounded-full -rotate-45" />
+              </motion.div>
+
+              {/* Impact Flash */}
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0.5, 1.5, 2.5], opacity: [0, 1, 0] }}
+                transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
+                className="absolute w-20 h-20 bg-white rounded-full mix-blend-overlay blur-md z-20 pointer-events-none"
+              />
+            </div>
             <h1 className="text-4xl font-black text-gradient bg-clip-text">Let's Connect!</h1>
             <p className="text-slate-300 text-sm mt-3 leading-relaxed">
               You and <strong className="text-white">{matchResult.creatorName}</strong> are connected.<br />

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
-import { CircleUser, Trash2, Upload, RefreshCw, X, MapPin } from 'lucide-react';
+import { CircleUser, Trash2, Upload, RefreshCw, X, MapPin, Briefcase, GraduationCap, Ruler, Scale, Dumbbell, Wine, Cigarette, Pencil } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
 import { getPhotoUrl, handleImageError } from '../utils/photoUrl';
 import LocationPickerModal from '../components/LocationPickerModal';
@@ -629,9 +629,10 @@ export default function ProfilePage() {
                         e.stopPropagation();
                         setShowLocationModal(true);
                       }}
-                      className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition-colors flex-shrink-0 ml-2 shadow-sm"
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition-colors flex-shrink-0 ml-2 shadow-sm flex items-center space-x-1"
                     >
-                      Change ✎
+                      <span>Change</span>
+                      <Pencil className="w-2.5 h-2.5" />
                     </button>
                   </div>
                 </div>
@@ -683,8 +684,7 @@ export default function ProfilePage() {
               onClick={() => setShowPreviewModal(false)}
               className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
             >
-              <Trash2 className="w-6 h-6 hidden" /> {/* Just to keep the import clean, we'll use an X. wait no, let's use a standard close button */}
-              <span className="font-bold text-xl">✕</span>
+              <X className="w-5 h-5" />
             </button>
           </div>
           
@@ -759,14 +759,14 @@ export default function ProfilePage() {
 
                 {/* Info Pills */}
                 <div className="flex flex-wrap gap-2">
-                  {job && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">💼 <span>{job}</span></span>}
-                  {education && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🎓 <span>{education}</span></span>}
-                  {height && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">📏 <span>{height} cm</span></span>}
-                  {weight && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">⚖️ <span>{weight} kg</span></span>}
-                  {gym && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">💪 <span>Gym: {gym}</span></span>}
-                  {drinking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🍷 <span>Drinks: {drinking}</span></span>}
-                  {smoking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">🚬 <span>Smokes: {smoking}</span></span>}
-                  {favoriteSpot && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1">📍 <span>Fav spot: {favoriteSpot}</span></span>}
+                  {job && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5"><Briefcase className="w-3.5 h-3.5 text-rose-400" /> <span>{job}</span></span>}
+                  {education && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5"><GraduationCap className="w-3.5 h-3.5 text-rose-400" /> <span>{education}</span></span>}
+                  {height && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5"><Ruler className="w-3.5 h-3.5 text-rose-400" /> <span>{height} cm</span></span>}
+                  {weight && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5"><Scale className="w-3.5 h-3.5 text-rose-400" /> <span>{weight} kg</span></span>}
+                  {gym && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5"><Dumbbell className="w-3.5 h-3.5 text-rose-400" /> <span>Gym: {gym}</span></span>}
+                  {drinking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5"><Wine className="w-3.5 h-3.5 text-rose-400" /> <span>Drinks: {drinking}</span></span>}
+                  {smoking && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5"><Cigarette className="w-3.5 h-3.5 text-rose-400" /> <span>Smokes: {smoking}</span></span>}
+                  {favoriteSpot && <span className="px-3 py-1 rounded-full border border-slate-700 text-slate-400 text-xs font-medium flex items-center space-x-1.5"><MapPin className="w-3.5 h-3.5 text-rose-400" /> <span>Fav spot: {favoriteSpot}</span></span>}
                 </div>
               </div>
 

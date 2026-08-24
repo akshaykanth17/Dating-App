@@ -13,7 +13,14 @@ import {
   ChevronLeft, 
   Compass, 
   ShieldAlert,
-  PartyPopper
+  PartyPopper,
+  ArrowRight,
+  ArrowLeft,
+  Layers,
+  Coffee,
+  Activity,
+  Lock,
+  Mic
 } from 'lucide-react';
 
 interface AppTutorialModalProps {
@@ -101,9 +108,10 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  className="absolute top-4 right-4 z-20 px-3 py-1 bg-emerald-500 text-white font-extrabold text-xs rounded-lg shadow-lg border border-white/20 uppercase tracking-wider"
+                  className="absolute top-4 right-4 z-20 px-3 py-1 bg-emerald-500 text-white font-extrabold text-xs rounded-lg shadow-lg border border-white/20 uppercase tracking-wider flex items-center space-x-1"
                 >
-                  ❤️ Liked!
+                  <Heart className="w-3.5 h-3.5 fill-white" />
+                  <span>Liked!</span>
                 </motion.div>
               )}
               {demoSwipeAction === 'PASS' && (
@@ -111,9 +119,10 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  className="absolute top-4 left-4 z-20 px-3 py-1 bg-rose-500 text-white font-extrabold text-xs rounded-lg shadow-lg border border-white/20 uppercase tracking-wider"
+                  className="absolute top-4 left-4 z-20 px-3 py-1 bg-rose-500 text-white font-extrabold text-xs rounded-lg shadow-lg border border-white/20 uppercase tracking-wider flex items-center space-x-1"
                 >
-                  ✖️ Passed
+                  <X className="w-3.5 h-3.5" />
+                  <span>Passed</span>
                 </motion.div>
               )}
               {demoSwipeAction === 'SUPER' && (
@@ -121,16 +130,17 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  className="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-3 py-1 bg-amber-500 text-white font-extrabold text-xs rounded-lg shadow-lg border border-white/20 uppercase tracking-wider"
+                  className="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-3 py-1 bg-amber-500 text-white font-extrabold text-xs rounded-lg shadow-lg border border-white/20 uppercase tracking-wider flex items-center space-x-1"
                 >
-                  ⭐ Super Liked!
+                  <Star className="w-3.5 h-3.5 fill-white" />
+                  <span>Super Liked!</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 font-bold text-lg">
-                ✨
+                <Sparkles className="w-6 h-6 text-rose-400" />
               </div>
               <div>
                 <p className="font-bold text-slate-100 text-sm">Sample Profile, 24</p>
@@ -141,7 +151,7 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
             </div>
 
             <p className="text-xs text-slate-300 italic bg-slate-950/60 p-2 rounded-lg border border-slate-800">
-              "Looking for someone who loves spontaneous weekend road trips ☕"
+              "Looking for someone who loves spontaneous weekend road trips"
             </p>
 
             {/* Interactive Demo Buttons */}
@@ -172,15 +182,21 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
 
           <div className="space-y-1.5 text-xs text-slate-400">
             <div className="flex items-center space-x-2">
-              <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">👉</span>
-              <span><strong>Swipe Right (or ❤️):</strong> Like a profile. If they like you back, it's a match!</span>
+              <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">
+                <ArrowRight className="w-3 h-3" />
+              </span>
+              <span><strong>Swipe Right:</strong> Like a profile. If they like you back, it's a match!</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="w-5 h-5 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-[10px] font-bold">👈</span>
-              <span><strong>Swipe Left (or ✖️):</strong> Pass to see the next person in your area.</span>
+              <span className="w-5 h-5 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-[10px] font-bold">
+                <ArrowLeft className="w-3 h-3" />
+              </span>
+              <span><strong>Swipe Left:</strong> Pass to see the next person in your area.</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px] font-bold">📜</span>
+              <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px] font-bold">
+                <Layers className="w-3 h-3" />
+              </span>
               <span><strong>Tap & Scroll:</strong> View all photos, lifestyle habits, and prompt answers.</span>
             </div>
           </div>
@@ -199,7 +215,10 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
           <div className="grid grid-cols-2 gap-2.5">
             <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-200">☕ Coffee & Chat</span>
+                <span className="text-xs font-bold text-slate-200 flex items-center space-x-1">
+                  <Coffee className="w-3.5 h-3.5 text-amber-400 mr-1" />
+                  <span>Coffee & Chat</span>
+                </span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-400 font-semibold">Today</span>
               </div>
               <p className="text-[11px] text-slate-400">"Trying the new specialty brew downtown!"</p>
@@ -211,7 +230,10 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
 
             <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-200">🏃 Weekend Trail</span>
+                <span className="text-xs font-bold text-slate-200 flex items-center space-x-1">
+                  <Activity className="w-3.5 h-3.5 text-teal-400 mr-1" />
+                  <span>Weekend Trail</span>
+                </span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-semibold">Sat</span>
               </div>
               <p className="text-[11px] text-slate-400">"5km sunrise run followed by smoothies."</p>
@@ -245,7 +267,7 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
           <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
             <div className="flex items-center space-x-3 pb-2 border-b border-slate-800">
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-violet-500 flex items-center justify-center font-bold text-xs text-white">
-                ❤️
+                <Heart className="w-4 h-4 fill-white" />
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-100">Mutual Match!</p>
@@ -256,12 +278,12 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
             <div className="space-y-2">
               <div className="flex justify-start">
                 <div className="bg-slate-800 text-slate-200 text-xs px-3 py-1.5 rounded-2xl rounded-tl-sm max-w-[80%]">
-                  Hey! I saw you love photography too 📸
+                  Hey! I saw you love photography too
                 </div>
               </div>
               <div className="flex justify-end">
                 <div className="bg-rose-600 text-white text-xs px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[80%]">
-                  Yes! Always hunting for great sunrise spots 🌅
+                  Yes! Always hunting for great sunrise spots
                 </div>
               </div>
             </div>
@@ -269,11 +291,11 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
 
           <div className="grid grid-cols-2 gap-2 text-xs text-slate-300">
             <div className="flex items-center space-x-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-              <span className="text-sm">🎯</span>
-              <span><strong>Icebreakers:</strong> Pre-made fun prompts to start chat.</span>
+              <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <span><strong>Icebreakers:</strong> Fun prompt cards to start chat.</span>
             </div>
             <div className="flex items-center space-x-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-              <span className="text-sm">🎙️</span>
+              <Mic className="w-4 h-4 text-violet-400 flex-shrink-0" />
               <span><strong>Voice Notes:</strong> Send quick audio messages anytime.</span>
             </div>
           </div>
@@ -316,8 +338,9 @@ export default function AppTutorialModal({ isOpen, onClose, userName }: AppTutor
           </div>
 
           <div className="p-2.5 rounded-xl bg-slate-900/50 border border-slate-800 text-center">
-            <p className="text-[11px] text-slate-400">
-              🔒 Always meet in public places and never share sensitive financial details.
+            <p className="text-[11px] text-slate-400 flex items-center justify-center space-x-1.5">
+              <Lock className="w-3.5 h-3.5 text-slate-400 inline mr-1" />
+              <span>Always meet in public places and never share sensitive financial details.</span>
             </p>
           </div>
         </div>

@@ -63,7 +63,7 @@ test.describe('Chat Messaging Flow', () => {
     const messageBubble = page.locator(`text=${testMessage}`);
     await expect(messageBubble).toBeVisible({ timeout: 10000 });
 
-    console.log('✅ Chat messaging test passed!');
+    console.log('[Test] Chat messaging test passed!');
   });
 
   test('should navigate to chat from match overlay after swiping right', async ({ page }) => {
@@ -117,7 +117,7 @@ test.describe('Chat Messaging Flow', () => {
       await chatInput.fill(msg);
       await chatInput.press('Enter');
       await expect(page.locator(`text=${msg}`)).toBeVisible({ timeout: 8000 });
-      console.log('✅ Match-to-chat flow test passed!');
+      console.log('[Test] Match-to-chat flow test passed!');
     } else {
       console.log('No match triggered. Test completed without match scenario.');
     }

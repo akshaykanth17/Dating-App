@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
-import { Settings, Lock, ShieldAlert, PlayCircle, MapPin, LogOut } from 'lucide-react';
+import { Settings, Lock, ShieldAlert, PlayCircle, MapPin, LogOut, Pencil } from 'lucide-react';
 import { reverseGeocode } from '../utils/location';
 import LocationPickerModal from '../components/LocationPickerModal';
+import BlockedUsersModal from '../components/BlockedUsersModal';
 
 interface ProfileData {
   id: string;
@@ -68,6 +69,9 @@ export default function SettingsPage() {
 
   // Logout confirmation modal
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Blocked users modal
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -194,7 +198,7 @@ export default function SettingsPage() {
                           : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'
                       }`}
                     >
-                      {g === 'male' ? '👨 Men' : g === 'female' ? '👩 Women' : '🌈 Other'}
+                      {g === 'male' ? 'Men' : g === 'female' ? 'Women' : 'Other'}
                     </button>
                   ))}
                 </div>
@@ -260,8 +264,9 @@ export default function SettingsPage() {
                       <p className="text-[11px] text-slate-400 truncate">Tap to change city or detect GPS</p>
                     </div>
                   </div>
-                  <span className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition-colors flex-shrink-0">
-                    Change ✎
+                  <span className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-bold transition-colors flex-shrink-0 flex items-center space-x-1">
+                    <span>Change</span>
+                    <Pencil className="w-2.5 h-2.5" />
                   </span>
                 </div>
               </div>
@@ -332,6 +337,17 @@ export default function SettingsPage() {
                 </button>
               </div>
             </form>
+
+            <div className="pt-4 mt-6 border-t border-slate-800/50">
+              <button
+                type="button"
+                onClick={() => setShowBlockedModal(true)}
+                className="w-full sm:w-auto px-6 py-2 rounded-xl bg-slate-800/50 border border-slate-700/50 text-slate-300 text-xs font-bold hover:bg-slate-700 hover:text-white transition-colors flex items-center justify-center sm:justify-start space-x-2"
+              >
+                <ShieldAlert className="w-4 h-4 text-rose-500" />
+                <span>Manage Blocked Users</span>
+              </button>
+            </div>
           </div>
 
           {/* Subtle Low-Priority App Tutorial Row */}
@@ -482,6 +498,10 @@ export default function SettingsPage() {
         onLocationSelected={(loc) => {
           setLocationName(loc.locationName);
         }}
+      />
+      <BlockedUsersModal
+        isOpen={showBlockedModal}
+        onClose={() => setShowBlockedModal(false)}
       />
     </Layout>
   );

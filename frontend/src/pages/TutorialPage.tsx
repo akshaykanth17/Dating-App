@@ -14,7 +14,14 @@ import {
   Compass, 
   ShieldAlert,
   CheckCircle2,
-  PartyPopper
+  PartyPopper,
+  User,
+  ArrowLeft,
+  ArrowRight,
+  Clock,
+  Coffee,
+  Activity,
+  Lightbulb
 } from 'lucide-react';
 
 export default function TutorialPage() {
@@ -126,7 +133,7 @@ export default function TutorialPage() {
     {
       badge: 'Interactive Practice 1/2',
       title: 'Practice: Swipe Left to Pass',
-      subtitle: 'Drag the bot profile card to the left, or tap the ✖️ button to pass on a profile.',
+      subtitle: 'Drag the bot profile card to the left, or tap the Pass button to pass on a profile.',
       accentGlow: 'bg-rose-500/20',
       isInteractive: true,
       illustration: (
@@ -137,9 +144,10 @@ export default function TutorialPage() {
               <motion.div 
                 animate={{ x: [-6, 0, -6] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="mb-2.5 px-3.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center shadow-lg"
+                className="mb-2.5 px-3.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center space-x-1.5 shadow-lg"
               >
-                👈 Drag card LEFT or tap ✖️
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Drag card LEFT or tap Pass</span>
               </motion.div>
 
               {/* Interactive Swipeable Card */}
@@ -156,13 +164,13 @@ export default function TutorialPage() {
                   style={{ opacity: passStampOpacity }}
                   className="absolute top-4 left-4 z-20 px-3 py-1 bg-rose-600 text-white font-black text-xs rounded-lg border border-white/20 uppercase tracking-wider rotate-[-12deg] shadow-lg pointer-events-none"
                 >
-                  PASS ✖️
+                  PASS
                 </motion.div>
 
                 {/* Bot Profile Details */}
                 <div className="flex items-center space-x-3">
-                  <div className="w-11 h-11 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center text-lg">
-                    🤖
+                  <div className="w-11 h-11 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center text-slate-300">
+                    <User className="w-6 h-6" />
                   </div>
                   <div>
                     <div className="flex items-center space-x-1.5">
@@ -175,7 +183,7 @@ export default function TutorialPage() {
                 </div>
 
                 <p className="text-xs text-slate-300 italic bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
-                  "Practice your swipe left on me! I won't be offended 😊"
+                  "Practice your swipe left on me! I won't be offended."
                 </p>
 
                 {/* Practice Action Buttons */}
@@ -214,22 +222,23 @@ export default function TutorialPage() {
                   setCurrentSlide(2);
                   setProgress(0);
                 }}
-                className="mt-2 w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors"
+                className="mt-2 w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors flex items-center justify-center space-x-1.5"
               >
-                Try Swipe Right (Like) 👉
+                <span>Try Swipe Right (Like)</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </motion.div>
           )}
         </div>
       ),
-      tip: 'You can also tap the ✖️ button if you prefer clicking over dragging.'
+      tip: 'You can also tap the Pass button if you prefer clicking over dragging.'
     },
 
     // Slide 2: Practice Action #2 - SWIPE RIGHT (LIKE & MATCH)
     {
       badge: 'Interactive Practice 2/2',
       title: 'Practice: Swipe Right to Like',
-      subtitle: 'Drag the bot profile card to the right, or tap the ❤️ button to send a Like and trigger a mutual match!',
+      subtitle: 'Drag the bot profile card to the right, or tap the Like button to send a Like and trigger a mutual match!',
       accentGlow: 'bg-emerald-500/20',
       isInteractive: true,
       illustration: (
@@ -240,9 +249,10 @@ export default function TutorialPage() {
               <motion.div 
                 animate={{ x: [0, 6, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="mb-2.5 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center shadow-lg"
+                className="mb-2.5 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center space-x-1.5 shadow-lg"
               >
-                Drag card RIGHT or tap ❤️ 👉
+                <span>Drag card RIGHT or tap Like</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </motion.div>
 
               {/* Interactive Swipeable Card */}
@@ -259,13 +269,13 @@ export default function TutorialPage() {
                   style={{ opacity: likeStampOpacity }}
                   className="absolute top-4 right-4 z-20 px-3 py-1 bg-emerald-600 text-white font-black text-xs rounded-lg border border-white/20 uppercase tracking-wider rotate-[12deg] shadow-lg pointer-events-none"
                 >
-                  LIKE ❤️
+                  LIKE
                 </motion.div>
 
                 {/* Bot Profile Details */}
                 <div className="flex items-center space-x-3">
-                  <div className="w-11 h-11 rounded-full bg-rose-500/20 border-2 border-rose-500/50 flex items-center justify-center text-lg">
-                    ✨
+                  <div className="w-11 h-11 rounded-full bg-rose-500/20 border-2 border-rose-500/50 flex items-center justify-center text-rose-400">
+                    <Sparkles className="w-6 h-6" />
                   </div>
                   <div>
                     <div className="flex items-center space-x-1.5">
@@ -278,7 +288,7 @@ export default function TutorialPage() {
                 </div>
 
                 <p className="text-xs text-slate-300 italic bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80">
-                  "I already swiped right on you! Swipe right to see what happens 💖"
+                  "I already swiped right on you! Swipe right to see what happens."
                 </p>
 
                 {/* Practice Action Buttons */}
@@ -317,21 +327,22 @@ export default function TutorialPage() {
                   setCurrentSlide(3);
                   setProgress(0);
                 }}
-                className="mt-2 w-full py-2 rounded-xl bg-gradient text-white font-bold text-xs shadow-md hover:opacity-95 transition-opacity"
+                className="mt-2 w-full py-2 rounded-xl bg-gradient text-white font-bold text-xs shadow-md hover:opacity-95 transition-opacity flex items-center justify-center space-x-1.5"
               >
-                Continue Tour 👉
+                <span>Continue Tour</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </motion.div>
           )}
         </div>
       ),
-      tip: 'Swipe Right or tap ❤️ anytime you like a profile!'
+      tip: 'Swipe Right or tap the Heart button anytime you like a profile!'
     },
 
     // Slide 3: Daily Free Super Like
     {
       badge: 'Daily Reward',
-      title: '1 Free Super Like Daily ⭐',
+      title: '1 Free Super Like Daily',
       subtitle: 'Log in every day to claim 1 free Super Like! Super Likes jump your profile straight to the top of their discovery stack with a glowing golden badge.',
       accentGlow: 'bg-amber-500/20',
       isInteractive: false,
@@ -362,15 +373,17 @@ export default function TutorialPage() {
             </div>
 
             <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center space-x-2.5 text-xs text-slate-300">
-              <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-amber-500 text-white font-black text-[10px]">
-                ⭐ SUPER LIKED YOU!
+              <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-amber-500 text-white font-black text-[10px] flex items-center space-x-1">
+                <Star className="w-3 h-3 fill-white inline mr-1" />
+                <span>SUPER LIKED YOU!</span>
               </span>
               <span className="text-[11px] text-slate-400">Pushed to top of their feed</span>
             </div>
           </motion.div>
 
-          <p className="text-[11px] text-slate-400 text-center flex items-center justify-center">
-            <span>⏰ Only when you log in daily will you receive your free Super Like.</span>
+          <p className="text-[11px] text-slate-400 text-center flex items-center justify-center space-x-1">
+            <Clock className="w-3.5 h-3.5 text-slate-400 inline mr-1" />
+            <span>Only when you log in daily will you receive your free Super Like.</span>
           </p>
         </div>
       ),
@@ -393,8 +406,8 @@ export default function TutorialPage() {
             className="p-3 rounded-2xl bg-slate-900/90 border border-teal-500/30 shadow-lg flex items-center justify-between"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-lg">
-                ☕
+              <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400">
+                <Coffee className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-100">Specialty Coffee Tasting</p>
@@ -413,8 +426,8 @@ export default function TutorialPage() {
             className="p-3 rounded-2xl bg-slate-900/90 border border-purple-500/30 shadow-lg flex items-center justify-between"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-lg">
-                🏃
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                <Activity className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-100">Sunrise Trail Jog</p>
@@ -442,7 +455,7 @@ export default function TutorialPage() {
           <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-2xl space-y-3">
             <div className="flex items-center space-x-2.5 pb-2.5 border-b border-slate-800">
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-violet-500 flex items-center justify-center text-xs text-white font-bold">
-                ❤️
+                <Heart className="w-4 h-4 fill-white" />
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-100">Mutual Match!</p>
@@ -453,12 +466,12 @@ export default function TutorialPage() {
             <div className="space-y-2 text-xs">
               <div className="flex justify-start">
                 <div className="bg-slate-800 text-slate-200 px-3 py-1.5 rounded-2xl rounded-tl-sm max-w-[85%]">
-                  "Hey! Loved your prompt about weekend getaways 🚗"
+                  "Hey! Loved your prompt about weekend getaways"
                 </div>
               </div>
               <div className="flex justify-end">
                 <div className="bg-rose-600 text-white px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[85%]">
-                  "Hi! Yes! What is your favorite road trip spot? 🌄"
+                  "Hi! Yes! What is your favorite road trip spot?"
                 </div>
               </div>
             </div>
@@ -656,8 +669,9 @@ export default function TutorialPage() {
 
             {/* Tip Box */}
             <div className="pt-1">
-              <p className="text-[11px] text-slate-500 font-medium bg-slate-900/60 border border-slate-800/80 px-3 py-1.5 rounded-full max-w-xs mx-auto">
-                💡 {current.tip}
+              <p className="text-[11px] text-slate-400 font-medium bg-slate-900/60 border border-slate-800/80 px-3 py-1.5 rounded-full max-w-xs mx-auto flex items-center justify-center space-x-1.5">
+                <Lightbulb className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 inline mr-1" />
+                <span>{current.tip}</span>
               </p>
             </div>
           </motion.div>
@@ -692,7 +706,7 @@ export default function TutorialPage() {
               : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/25'
           }`}
         >
-          <span>{isLast ? 'Enter TapIn 🚀' : 'Next'}</span>
+          <span>{isLast ? 'Enter TapIn' : 'Next'}</span>
           {!isLast && <ChevronRight className="w-4 h-4" />}
         </button>
       </div>

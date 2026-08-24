@@ -127,4 +127,71 @@ export class SafetyController {
       return res.status(500).json({ error: 'Internal server error' });
     }
   }
+
+  static async getBlockedUsers(req: AuthenticatedRequest, res: Response) {
+    const userId = req.userId!;
+    
+    try {
+      const blocks = await prisma.block.findMany({
+        where: { blockerId: userId },
+        include: {
+          blocked: {
+            include: {
+              profile: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      const blockedUsers = blocks.map(block => {
+        const p = block.blocked.profile;
+        let primaryPhotoUrl = null;
+        if (p?.photos && Array.isArray(p.photos) && p.photos.length > 0) {
+          const photos = p.photos as any[];
+          const primary = photos.find(ph => ph.isPrimary) || photos[0];
+          primaryPhotoUrl = primary.url;
+        }
+
+        return {
+          id: block.blocked.id,
+          name: p?.name || 'Unknown User',
+          photoUrl: primaryPhotoUrl,
+          blockedAt: block.createdAt
+        };
+      });
+
+      return res.status(200).json({ blockedUsers });
+    } catch (error) {
+      console.error('[SafetyController.getBlockedUsers] Error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  static async unblockUser(req: AuthenticatedRequest, res: Response) {
+    const userId = req.userId!;
+    const { blockedId } = req.params;
+
+    if (!blockedId) {
+      return res.status(400).json({ error: 'Blocked user ID is required' });
+    }
+
+    try {
+      await prisma.block.delete({
+        where: {
+          blockerId_blockedId: {
+            blockerId: userId,
+            blockedId
+          }
+        }
+      });
+      return res.status(200).json({ message: 'User unblocked successfully' });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        return res.status(404).json({ error: 'Block record not found' });
+      }
+      console.error('[SafetyController.unblockUser] Error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 }

@@ -41,7 +41,7 @@ async function main() {
             name: name,
             birthdate: new Date(`199${Math.floor(Math.random() * 9)}-0${Math.floor(Math.random() * 8) + 1}-15`),
             gender: isFemale ? 'female' : 'male',
-            bio: `Hello from ${name}! I'm just another dummy profile added so you can test the swipe stack effect. Happy swiping! 🚀`,
+            bio: `Hello from ${name}! I'm just another dummy profile added so you can test the swipe stack effect. Happy swiping!`,
             latitude: 10.67 + latOffset,
             longitude: 76.60 + lngOffset,
             interests: ['Testing', 'UI Design', 'Swiping', 'Coffee'],
