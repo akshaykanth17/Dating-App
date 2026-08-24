@@ -6,7 +6,7 @@ import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import {
   Calendar, MapPin, Clock, Plus, Heart, X, User as UserIcon,
-  RefreshCw, Map, Sparkles, Coffee, ExternalLink, Settings2, PartyPopper
+  RefreshCw, Map, Sparkles, Coffee, ExternalLink, Settings2
 } from 'lucide-react';
 import FilterModal, { type FilterState } from '../components/FilterModal';
 import Confetti from 'react-confetti';
