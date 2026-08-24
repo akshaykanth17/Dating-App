@@ -253,13 +253,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleGenderInterestChange = (g: string) => {
-    if (gendersInterested.includes(g)) {
-      setGendersInterested((prev) => prev.filter((item) => item !== g));
-    } else {
-      setGendersInterested((prev) => [...prev, g]);
-    }
-  };
+
 
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
@@ -283,8 +277,17 @@ export default function ProfilePage() {
       <div className="space-y-8 max-w-4xl mx-auto pb-12">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-100 flex items-center space-x-2">
-              <CircleUser className="w-8 h-8 text-rose-500" />
+            <h1 className="text-3xl font-extrabold text-slate-100 flex items-center space-x-3">
+              {primaryPreviewPhoto ? (
+                <img 
+                  src={getPhotoUrl(primaryPreviewPhoto.url)} 
+                  alt="Profile" 
+                  onError={handleImageError}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-rose-500/80 shadow-md shadow-rose-500/20 bg-slate-800" 
+                />
+              ) : (
+                <CircleUser className="w-8 h-8 text-rose-500" />
+              )}
               <span>My Profile</span>
             </h1>
             <div className="mt-2 flex items-center space-x-3">
@@ -439,36 +442,17 @@ export default function ProfilePage() {
                   ></textarea>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">My Gender</label>
-                    <select
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
-                    >
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">I am interested in</label>
-                    <div className="flex flex-wrap items-center gap-3 mt-2">
-                      {['male', 'female', 'other'].map((g) => (
-                        <label key={g} className="flex items-center space-x-2 text-sm text-slate-300 capitalize cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={gendersInterested.includes(g)}
-                            onChange={() => handleGenderInterestChange(g)}
-                            className="rounded border-slate-800 text-rose-500 focus:ring-rose-500/50 bg-slate-900"
-                          />
-                          <span>{g}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">My Gender</label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-rose-500"
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
 
                 <div className="border-t border-slate-800/50 pt-6 mt-6">
