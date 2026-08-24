@@ -29,8 +29,8 @@ export default function BlockedUsersModal({ isOpen, onClose }: BlockedUsersModal
   const fetchBlockedUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/safety/blocked');
-      setBlockedUsers(response.data.blockedUsers || []);
+      const response = await api.get<{ blockedUsers: BlockedUser[] }>('/safety/blocked');
+      setBlockedUsers(response.blockedUsers || []);
     } catch (error) {
       console.error('Failed to fetch blocked users:', error);
     } finally {

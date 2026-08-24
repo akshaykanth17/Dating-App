@@ -137,7 +137,11 @@ export class SafetyController {
         include: {
           blocked: {
             include: {
-              profile: true
+              profile: {
+                include: {
+                  photos: true
+                }
+              }
             }
           }
         },
